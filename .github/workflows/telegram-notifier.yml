@@ -50,8 +50,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && github.event.action == 'review_requested' }}
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          to: -4180709325
+          token: 7116884411:AAFl-Wy_azTnQQrSgsjkLw1rd74a7F13-Vc
           message: |
             👀 Review requested on pull request by ${{ github.actor }}.
             Reviewers requested: ${{ github.event.pull_request.requested_reviewers | map(x => x.login) | join(' ') }}.
