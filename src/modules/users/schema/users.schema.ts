@@ -1,8 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document, Types } from "mongoose";
+import { Document } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { Locale, Role, UserDto } from "../dto/users.dto";
-import { Service } from "src/modules/service/schema/service.schema";
 
 @Schema()
 export class User extends Document {
@@ -48,11 +47,12 @@ export class User extends Document {
   locale: Locale;
 
   @Prop({
-    type: String,
+    type: [String],
+    enum: Role,
     required: true,
-    default: Role.CLIENT,
+    default: [Role.CLIENT],
   })
-  role: string;
+  role: Role[];
 
   @Prop({
     type: String,
@@ -65,10 +65,6 @@ export class User extends Document {
     required: true,
   })
   password: string;
-
-  //reference to the provider
-  @Prop({ type: [{ type: Types.ObjectId, ref: "Owner" }] })
-  services: Service[];
 
   @Prop({
     type: Date,

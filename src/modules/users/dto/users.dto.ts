@@ -21,8 +21,8 @@ export enum Locale {
 }
 
 export enum Role {
-  PROV = "provider",
   CLIENT = "client",
+  PROVIDER = "provider",
   PARTNER = "partner",
   SUPPORT = "support",
   ADMIN = "admin",

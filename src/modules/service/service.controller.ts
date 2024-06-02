@@ -17,16 +17,14 @@ import {
   ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
 import {
   AddServiceResponseDto,
-  CreateServiceDto,
   GetAllServiceResponseDto,
   GetOneServiceResponseDto,
   ServiceDto,
 } from "./dto/service.dto";
 import { ServiceService } from "./service.service";
-import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
-import { query } from "express";
 
 @ApiTags("Service")
 @Controller("service")

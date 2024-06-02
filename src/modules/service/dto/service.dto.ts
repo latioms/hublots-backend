@@ -1,15 +1,14 @@
 import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
-  IsString,
-  IsUUID,
+  IsArray,
   IsNumber,
   IsOptional,
+  IsString,
+  IsUUID,
   MinLength,
   ValidateNested,
-  IsArray,
 } from "class-validator";
-import { Types } from "mongoose";
 import { BulkResponseMetadataDto, ResponseMetadataDto } from "src/modules/dto";
 
 export class CreateServiceDto {
