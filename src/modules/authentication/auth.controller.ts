@@ -21,6 +21,7 @@ import { AuthGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
 import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
 import { SocialAuthService } from "./google/google-auth.service";
+import { Public } from "./decorator/auth.decorator";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -33,8 +34,10 @@ export class AuthController {
 
   @ApiCreatedResponse({
     type: SignInResponseDto,
-    description: "Successfully signed user in",
+    description: "User Successfully signed in",
   })
+
+  @Public()
   @Post("login")
   async signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
     const accessToken = await this.authService.signIn(
@@ -43,7 +46,7 @@ export class AuthController {
     );
     return new SignInResponseDto({
       accessToken,
-      message: "Successfully signed user in",
+      message: "User Successfully signed in",
       status: ResponseStatus.SUCCESS,
     });
   }
@@ -81,6 +84,7 @@ export class AuthController {
     });
   }
 
+  @Public()
   @Post("register")
   @ApiCreatedResponse({
     type: RegisterUserResponseDto,
@@ -90,11 +94,11 @@ export class AuthController {
     @Body() createUserDto: UserDto,
   ): Promise<RegisterUserResponseDto> {
     try {
-      const users = await this.userService.register(createUserDto);
+      const user = await this.userService.register(createUserDto);
       return new RegisterUserResponseDto({
-        data: users,
+        data: user,
         status: ResponseStatus.SUCCESS,
-        message: "Successfully  register user",
+        message: "Successfully register user",
       });
     } catch (error) {
       throw new HttpException(
