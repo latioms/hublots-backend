@@ -61,14 +61,16 @@ export class CreateUserDto {
 
   @ApiProperty({
     example: "FR",
-    description: "The locale is the default language of the user. Required to create a new account",
+    description:
+      "The locale is the default language of the user. Required to create a new account",
   })
   @IsEnum(Locale)
   locale: Locale;
 
   @ApiProperty({
     example: "provider",
-    description: "The role property is the Role of the user. Required to create a new account",
+    description:
+      "The role property is the Role of the user. Required to create a new account",
   })
   @IsEnum(Role)
   role: Role;

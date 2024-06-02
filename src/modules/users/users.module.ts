@@ -2,13 +2,13 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthGuard } from "../authentication/auth.guard";
+import { AuthGuard } from "../auth/auth.guard";
 import { User, UserSchema } from "./schema/users.schema";
 import { UsersController } from "./users.controller";
 import { UserService } from "./users.service";
 
-import { ClientModule } from './client/client.module';
-import { ProvModule } from './prov/prov.module';
+import { ClientModule } from "./client/client.module";
+import { ProvModule } from "./prov/prov.module";
 import { ServiceModule } from "../service/service.module";
 
 @Module({
@@ -16,7 +16,7 @@ import { ServiceModule } from "../service/service.module";
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     ClientModule,
     ProvModule,
-    ServiceModule
+    ServiceModule,
   ],
   controllers: [UsersController],
   providers: [

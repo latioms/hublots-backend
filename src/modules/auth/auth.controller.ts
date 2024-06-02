@@ -36,7 +36,6 @@ export class AuthController {
     type: SignInResponseDto,
     description: "User Successfully signed in",
   })
-
   @Public()
   @Post("login")
   async signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {

@@ -5,7 +5,6 @@ import { ServiceDto } from "../dto/service.dto";
 
 @Schema()
 export class Service extends Document {
-  
   @Prop({ required: true, default: uuidv4, unique: true })
   id: string;
 
@@ -24,8 +23,7 @@ export class Service extends Document {
   @Prop({ type: String, required: true })
   createdAt: Date;
 
-
-  toJSON(){
+  toJSON() {
     const service = this.toObject();
     service.id = service._id;
     delete service._id;
@@ -39,4 +37,4 @@ export class Service extends Document {
   }
 }
 
-export const ServiceSchema = SchemaFactory.createForClass(Service)
+export const ServiceSchema = SchemaFactory.createForClass(Service);
