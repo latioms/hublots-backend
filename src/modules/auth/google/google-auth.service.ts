@@ -49,7 +49,6 @@ export class SocialAuthService {
       isOnline: true,
       isVerified: false,
       locale: data.locale as Locale,
-      role: null,
       password: null,
     };
     const existingUser = await this.userService.findByEmail(data.email);

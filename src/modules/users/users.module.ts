@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthGuard } from "../auth/auth.guard";
+import { AuthenticatorGuard } from "../auth/auth.guard";
 import { User, UserSchema } from "./schema/users.schema";
 import { UsersController } from "./users.controller";
 import { UserService } from "./users.service";
@@ -23,7 +23,7 @@ import { ServiceModule } from "../service/service.module";
     UserService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: AuthenticatorGuard,
     },
     JwtService,
   ],

@@ -68,14 +68,6 @@ export class CreateUserDto {
   locale: Locale;
 
   @ApiProperty({
-    example: "provider",
-    description:
-      "The role property is the Role of the user. Required to create a new account",
-  })
-  @IsEnum(Role)
-  role: Role;
-
-  @ApiProperty({
     example: "Lobbessou",
     description: "The address is required to create a new account",
   })
@@ -105,6 +97,10 @@ export class GetUserByIdDto {
 }
 
 export class UserDto extends CreateUserDto {
+  @IsUUID()
+  @ApiProperty()
+  id: string;
+
   @ApiProperty({
     description: "Timestamp of last update",
   })
@@ -122,6 +118,16 @@ export class UserDto extends CreateUserDto {
   })
   @IsDateString()
   deletedAt: Date;
+
+  @ApiProperty({
+    example: ["CLIENT", "PROVIDER"],
+    description:
+      "The roles property is an array of Roles for the user. Required to create a new account.",
+    isArray: true,
+    enum: Role,
+  })
+  @IsEnum(Role, { each: true })
+  roles: Role[];
 
   constructor(user: UserDto) {
     super(user);
@@ -182,4 +188,10 @@ export class GoogleSignInDto {
   })
   @IsString()
   socialMode: string;
+}
+
+declare module "express" {
+  export interface Request {
+    user?: UserDto;
+  }
 }

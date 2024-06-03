@@ -17,7 +17,7 @@ import {
   UserDto,
 } from "../users/dto/users.dto";
 import { UserService } from "../users/users.service";
-import { AuthGuard } from "./auth.guard";
+import { AuthenticatorGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
 import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
 import { SocialAuthService } from "./google/google-auth.service";
@@ -67,7 +67,7 @@ export class AuthController {
   }
 
   @Get("profile")
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthenticatorGuard)
   @ApiCreatedResponse({
     type: GetOneUserResponseDto,
     description: "Successful user registration",

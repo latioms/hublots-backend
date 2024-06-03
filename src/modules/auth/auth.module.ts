@@ -4,7 +4,7 @@ import { UsersModule } from "../users/users.module";
 import { JwtModule } from "@nestjs/jwt";
 import { AuthController } from "./auth.controller";
 import { jwtConstants } from "../../constants/constants";
-import { AuthGuard } from "./auth.guard";
+import { AuthenticatorGuard } from "./auth.guard";
 import { APP_GUARD } from "@nestjs/core";
 import { PassportModule } from "@nestjs/passport";
 import { SocialAuthService } from "./google/google-auth.service";
@@ -24,7 +24,7 @@ import { SocialAuthService } from "./google/google-auth.service";
     SocialAuthService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: AuthenticatorGuard,
     },
   ],
   controllers: [AuthController],
