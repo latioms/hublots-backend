@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,6 +9,8 @@ import {
   Param,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
@@ -17,21 +20,27 @@ import {
   ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { Request } from "express";
+import { AuthenticatorGuard } from "../auth/auth.guard";
+import { Public, UseRoles } from "../auth/decorator/auth.decorator";
 import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
+import { Role } from "../users/dto";
 import {
   AddServiceResponseDto,
+  CreateServiceDto,
   GetAllServiceResponseDto,
   GetOneServiceResponseDto,
-  ServiceDto,
 } from "./dto/service.dto";
 import { ServiceService } from "./service.service";
 
-@ApiTags("Service")
-@Controller("service")
+@ApiTags("Services")
+@Controller("services")
+@UseGuards(AuthenticatorGuard)
 export class ServiceController {
   constructor(private serviceService: ServiceService) {}
 
   @Get()
+  @Public()
   @ApiOkResponse({
     type: GetAllServiceResponseDto,
     description: "list of successfully loaded services",
@@ -49,14 +58,30 @@ export class ServiceController {
     });
   }
 
-  @Post("add")
+  @Post("new")
+  @UseRoles(Role.PROVIDER, Role.SUPPORT)
   @ApiCreatedResponse({
     type: AddServiceResponseDto,
     description: "Service Created Sucessfully",
   })
-  async add(@Body() addServiceDto: ServiceDto): Promise<AddServiceResponseDto> {
+  async create(
+    @Req() request: Request,
+    @Body() createServiceDto: CreateServiceDto,
+  ): Promise<AddServiceResponseDto> {
+    if (
+      !createServiceDto.provider &&
+      !request.user.roles.includes(Role.PROVIDER)
+    ) {
+      throw new BadRequestException("provider must be provider");
+    }
+
     try {
-      const service = await this.serviceService.add(addServiceDto);
+      const service = await this.serviceService.add({
+        ...createServiceDto,
+        provider: request.user.roles.includes(Role.PROVIDER)
+          ? request.user.id
+          : createServiceDto.provider,
+      });
       return new AddServiceResponseDto({
         data: service,
         message: "Service Created Sucessfully",
@@ -81,7 +106,7 @@ export class ServiceController {
   @ApiNotFoundResponse({ description: "Service not found" })
   @ApiBadGatewayResponse({ description: "Invalid service ID" })
   async findOne(
-    @Param("id") serviceId: any,
+    @Param("id") serviceId: string,
   ): Promise<GetOneServiceResponseDto> {
     const service = await this.serviceService.findOne(serviceId); // Call the findOne method with the serviceId parameter
     return new GetOneServiceResponseDto({
@@ -92,11 +117,12 @@ export class ServiceController {
   }
 
   @Delete(":id")
+  @UseRoles(Role.PROVIDER)
   @ApiNoContentResponse({
     type: ResponseMetadataDto,
     description: "Service successfully deleted",
   })
-  async delete(@Param("id") serviceId: any): Promise<ResponseMetadataDto> {
+  async delete(@Param("id") serviceId: string): Promise<ResponseMetadataDto> {
     await this.serviceService.delete(serviceId);
     return new ResponseMetadataDto({
       status: ResponseStatus.SUCCESS,

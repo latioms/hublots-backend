@@ -5,7 +5,7 @@ import { JwtService } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Service, ServiceSchema } from "./schema/service.schema";
 import { APP_GUARD } from "@nestjs/core";
-import { AuthGuard } from "../auth/auth.guard";
+import { AuthenticatorGuard } from "../auth/auth.guard";
 import { UserService } from "../users/users.service";
 import { User, UserSchema } from "../users/schema/users.schema";
 
@@ -19,7 +19,7 @@ import { User, UserSchema } from "../users/schema/users.schema";
     UserService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: AuthenticatorGuard,
     },
     JwtService,
   ],

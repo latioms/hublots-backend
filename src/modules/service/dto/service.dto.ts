@@ -1,4 +1,9 @@
-import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
   IsArray,
@@ -34,6 +39,15 @@ export class CreateServiceDto {
   })
   @IsNumber()
   price: number;
+
+  //referencing the user who created the service
+  @ApiPropertyOptional({
+    example: "60e1f9f1c3c7b40015f7c4b5",
+    description: "User ID of the service provider",
+  })
+  @IsUUID()
+  @IsOptional()
+  provider: string;
 
   constructor(createService: CreateServiceDto) {
     Object.assign(this, createService);
@@ -72,14 +86,6 @@ export class ServiceDto extends CreateServiceDto {
   @IsOptional()
   @IsString()
   availability: string;
-
-  //referencing the user who created the service
-  @ApiProperty({
-    example: "60e1f9f1c3c7b40015f7c4b5",
-    description: "User ID of the service provider",
-  })
-  @IsUUID()
-  provider: string;
 
   constructor(service: ServiceDto) {
     super(service);
