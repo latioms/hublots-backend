@@ -12,12 +12,12 @@ import { OrderModule } from "./modules/order/order.module";
 
 @Module({
   imports: [
-    UsersModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DATABASE_HOST),
+    AuthModule,
+    UsersModule,
     ChatModule,
     ServiceModule,
     PaymentModule,

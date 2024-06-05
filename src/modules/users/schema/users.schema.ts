@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { Locale, Role, UserDto } from "../dto/users.dto";
 
@@ -84,6 +84,10 @@ export class User extends Document {
     required: false,
   })
   deletedAt: Date;
+
+  //reference to images
+  @Prop({ type: [{ type: Types.ObjectId, ref: "Image", required: true }] })
+  kycImages: Types.ObjectId[];
 
   toJSON() {
     const user = this.toObject();

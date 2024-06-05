@@ -7,16 +7,12 @@ import { User, UserSchema } from "./schema/users.schema";
 import { UsersController } from "./users.controller";
 import { UserService } from "./users.service";
 
-import { ClientModule } from "./client/client.module";
-import { ProvModule } from "./prov/prov.module";
-import { ServiceModule } from "../service/service.module";
+import { FileUploadModule } from "../files/file-upload.module";
 
 @Module({
   imports: [
+    FileUploadModule.forRoot(process.env.DATABASE_HOST, "kycImages"),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    ClientModule,
-    ProvModule,
-    ServiceModule,
   ],
   controllers: [UsersController],
   providers: [
