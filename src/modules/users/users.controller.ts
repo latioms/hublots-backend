@@ -8,28 +8,40 @@ import {
   Param,
   Put,
   Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
-  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { AuthenticatorGuard } from "../auth/auth.guard";
+import { UseRoles } from "../auth/decorator/auth.decorator";
+import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
+import { FileUploadService } from "../files/file-upload.service";
 import {
   GetAllUserResponseDto,
   GetOneUserResponseDto,
+  Role,
   UpdateUserDto,
 } from "./dto/users.dto";
 import { UserService } from "./users.service";
-import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
 
 @ApiTags("Users")
 @Controller("users")
+@UseGuards(AuthenticatorGuard)
 export class UsersController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly fileUploadService: FileUploadService,
+  ) {}
 
   @Get()
+  @UseRoles(Role.ADMIN, Role.SUPPORT)
   @ApiOkResponse({
     type: GetAllUserResponseDto,
     description: "list of successfully loaded users",
@@ -90,7 +102,8 @@ export class UsersController {
   }
 
   @Delete(":id")
-  @ApiNoContentResponse({
+  @UseRoles(Role.ADMIN)
+  @ApiOkResponse({
     type: ResponseMetadataDto,
     description: "User successfully deleted",
   })
@@ -100,6 +113,37 @@ export class UsersController {
       return new ResponseMetadataDto({
         message: "Successfully deleted user",
         status: ResponseStatus.ERROR,
+      });
+    } catch (error) {
+      throw new HttpException(
+        new ResponseMetadataDto({
+          message: error.message,
+          status: ResponseStatus.ERROR,
+        }),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Put(":id/kyc-files")
+  @ApiOkResponse({
+    type: GetOneUserResponseDto,
+    description: "Successfully uploaded user KYC images",
+  })
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadKYCImages(@Param("id") userId: string, @UploadedFiles() files) {
+    try {
+      const imageIds = [];
+      for (const file of files) {
+        const image = await this.fileUploadService.uploadImage(file);
+        imageIds.push(image._id);
+      }
+
+      const user = await this.userService.addKYCImages(userId, imageIds);
+      return new GetOneUserResponseDto({
+        data: user,
+        message: "Successfully uploaded user KYC images",
+        status: ResponseStatus.SUCCESS,
       });
     } catch (error) {
       throw new HttpException(

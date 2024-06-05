@@ -1,10 +1,11 @@
+import { NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import * as bcrypt from "bcrypt";
+import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { BulkQueryDto } from "../dto/response.dto";
 import { CreateUserDto, UpdateUserDto, UserDto } from "./dto/users.dto";
 import { User } from "./schema/users.schema";
-import { NotFoundException } from "@nestjs/common";
 
 export class UserService {
   constructor(
@@ -54,6 +55,13 @@ export class UserService {
         { new: true },
       )
       .exec();
+    return new UserDto(user.toJSON());
+  }
+
+  async addKYCImages(userId: string, imageIds: string[]): Promise<UserDto> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
+    user.kycImages.push(...imageIds.map((id) => new ObjectId(id)));
     return new UserDto(user.toJSON());
   }
 }
