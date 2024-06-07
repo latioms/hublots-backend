@@ -1,10 +1,12 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpStatus,
   Param,
+  Post,
   Put,
   Query,
   Req,
@@ -15,6 +17,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
+  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -26,6 +29,7 @@ import { UseRoles } from "../auth/decorator/auth.decorator";
 import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { FileUploadService } from "../files/file-upload.service";
 import {
+  CreateAccountDto,
   GetAllUserResponseDto,
   GetOneUserResponseDto,
   Role,
@@ -158,6 +162,31 @@ export class UsersController {
     return new GetOneUserResponseDto({
       data: new UserDto(user.toJSON()),
       message: "Successfully uploaded user KYC images",
+      status: HttpStatus.OK,
+    });
+  }
+
+  @Post("/new")
+  @UseRoles(Role.ADMIN, Role.SUPPORT)
+  @ApiCreatedResponse({
+    type: GetOneUserResponseDto,
+    description: "Successfully created user account",
+  })
+  async createUser(@Req() req: Request, @Body() newUser: CreateAccountDto) {
+    const roles = req.user.roles;
+
+    if (
+      (!roles.includes(Role.ADMIN) && newUser.roles.includes(Role.ADMIN)) ||
+      newUser.roles.includes(Role.SUPPORT)
+    )
+      throw new BadRequestException(
+        "Only admin can create another admin or customer service account",
+      );
+
+    const user = await this.usersService.createAcount(newUser);
+    return new GetOneUserResponseDto({
+      data: new UserDto(user.toJSON()),
+      message: "Successfully create user account",
       status: HttpStatus.OK,
     });
   }

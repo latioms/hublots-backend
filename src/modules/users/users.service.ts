@@ -4,7 +4,11 @@ import * as bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { BulkQueryDto } from "../dto/response.dto";
-import { CreateUserDto, UpdateUserDto } from "./dto/users.dto";
+import {
+  CreateAccountDto,
+  CreateUserDto,
+  UpdateUserDto,
+} from "./dto/users.dto";
 import { User } from "./schema/users.schema";
 
 export class UsersService {
@@ -61,5 +65,11 @@ export class UsersService {
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
     user.kycImages.push(...imageIds.map((id) => new ObjectId(id)));
     return user.save();
+  }
+
+  async createAcount(account: CreateAccountDto) {
+    //FIXME: sent default password to user
+    const password = "default-password";
+    return this.register({ ...account, password });
   }
 }

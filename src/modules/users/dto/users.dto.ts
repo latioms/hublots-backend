@@ -97,6 +97,18 @@ export class GetUserByIdDto {
   id: string;
 }
 
+export class CreateAccountDto extends OmitType(CreateUserDto, ["password"]) {
+  @ApiProperty({
+    example: ["CLIENT", "PROVIDER"],
+    description:
+      "The roles property is an array of Roles for the user. Required to create a new account.",
+    isArray: true,
+    enum: Role,
+  })
+  @IsEnum(Role, { each: true })
+  roles: Role[];
+}
+
 export class UserDto extends CreateUserDto {
   @IsUUID()
   @ApiProperty()
