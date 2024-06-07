@@ -7,7 +7,7 @@ import { BulkQueryDto } from "../dto/response.dto";
 import {
   CreateAccountDto,
   CreateUserDto,
-  UpdateUserDto,
+  UpdateProfileDto,
   VerificationStatus,
 } from "./dto/users.dto";
 import { User } from "./schema/users.schema";
@@ -51,7 +51,7 @@ export class UsersService {
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
   }
 
-  async update(userId: string, data: UpdateUserDto): Promise<User> {
+  async update(userId: string, data: UpdateProfileDto): Promise<User> {
     return this.userModel
       .findByIdAndUpdate(
         userId,

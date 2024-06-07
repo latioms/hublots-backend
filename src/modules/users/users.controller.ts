@@ -33,6 +33,7 @@ import {
   GetAllUserResponseDto,
   GetOneUserResponseDto,
   Role,
+  UpdateProfileDto,
   UpdateUserDto,
   UserDto,
 } from "./dto/users.dto";
@@ -84,9 +85,9 @@ export class UsersController {
   })
   async updateProfile(
     @Req() req: Request,
-    @Body() updateUsersDto: UpdateUserDto,
+    @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<GetOneUserResponseDto> {
-    const user = await this.usersService.update(req.user.id, updateUsersDto);
+    const user = await this.usersService.update(req.user.id, updateProfileDto);
     return new GetOneUserResponseDto({
       data: new UserDto(user.toJSON()),
       message: "Successfully retrieved user",
@@ -120,9 +121,9 @@ export class UsersController {
   })
   async update(
     @Param("id") userId: string,
-    @Body() updateUsersDto: UpdateUserDto,
+    @Body() updateUserDto: UpdateUserDto,
   ): Promise<GetOneUserResponseDto> {
-    const user = await this.usersService.update(userId, updateUsersDto);
+    const user = await this.usersService.update(userId, updateUserDto);
     return new GetOneUserResponseDto({
       data: new UserDto(user.toJSON()),
       message: "Successfully retrieved user",

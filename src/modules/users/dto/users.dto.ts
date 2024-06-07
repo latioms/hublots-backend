@@ -159,8 +159,11 @@ export class UserDto extends CreateUserDto {
   }
 }
 
-export class UpdateUserDto extends PartialType(
+export class UpdateProfileDto extends PartialType(
   OmitType(UserDto, ["password", "email", "verificationStatus"] as const),
+) {}
+export class UpdateUserDto extends PartialType(
+  OmitType(UserDto, ["password", "email"] as const),
 ) {}
 
 export class RegisterUserResponseDto extends ResponseMetadataDto {
