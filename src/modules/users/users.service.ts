@@ -7,7 +7,7 @@ import { BulkQueryDto } from "../dto/response.dto";
 import { CreateUserDto, UpdateUserDto, UserDto } from "./dto/users.dto";
 import { User } from "./schema/users.schema";
 
-export class UserService {
+export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}

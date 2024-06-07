@@ -8,6 +8,7 @@ import {
   Param,
   Put,
   Query,
+  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -19,6 +20,7 @@ import {
   ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { Request } from "express";
 import { AuthenticatorGuard } from "../auth/auth.guard";
 import { UseRoles } from "../auth/decorator/auth.decorator";
 import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
@@ -29,14 +31,14 @@ import {
   Role,
   UpdateUserDto,
 } from "./dto/users.dto";
-import { UserService } from "./users.service";
+import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
 @UseGuards(AuthenticatorGuard)
 export class UsersController {
   constructor(
-    private readonly userService: UserService,
+    private readonly usersService: UsersService,
     private readonly fileUploadService: FileUploadService,
   ) {}
 
@@ -47,7 +49,7 @@ export class UsersController {
     description: "list of successfully loaded users",
   })
   async findAll(@Query() query: BulkQueryDto): Promise<GetAllUserResponseDto> {
-    const users = await this.userService.findAll(query);
+    const users = await this.usersService.findAll(query);
     return new GetAllUserResponseDto({
       data: users,
       page: query.page ?? 1,
@@ -64,8 +66,8 @@ export class UsersController {
   })
   @ApiNotFoundResponse({ description: "User not found" })
   @ApiBadRequestResponse({ description: "Invalid user ID" })
-  async findOne(@Param("id") userId: any): Promise<GetOneUserResponseDto> {
-    const user = await this.userService.findOne(userId);
+  async findOne(@Param("id") userId: string): Promise<GetOneUserResponseDto> {
+    const user = await this.usersService.findOne(userId);
 
     return new GetOneUserResponseDto({
       data: user,
@@ -74,7 +76,49 @@ export class UsersController {
     });
   }
 
+  @Get("profile")
+  @UseGuards(AuthenticatorGuard)
+  @ApiOkResponse({
+    type: GetOneUserResponseDto,
+    description: "Successful user registration",
+  })
+  async getProfile(@Req() req: Request): Promise<GetOneUserResponseDto> {
+    return new GetOneUserResponseDto({
+      data: req.user,
+      message: "Successfully retrieved user profile",
+      status: ResponseStatus.SUCCESS,
+    });
+  }
+
+  @Put("profile")
+  @ApiOkResponse({
+    type: GetOneUserResponseDto,
+    description: "The user has been successfully modified",
+  })
+  async updateProfile(
+    @Req() req: Request,
+    @Body() updateUsersDto: UpdateUserDto,
+  ): Promise<GetOneUserResponseDto> {
+    try {
+      const user = await this.usersService.update(req.user.id, updateUsersDto);
+      return new GetOneUserResponseDto({
+        data: user,
+        message: "Successfully retrieved user",
+        status: ResponseStatus.SUCCESS,
+      });
+    } catch (error) {
+      throw new HttpException(
+        new ResponseMetadataDto({
+          message: error.message,
+          status: ResponseStatus.ERROR,
+        }),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Put(":id")
+  @UseRoles(Role.ADMIN, Role.SUPPORT)
   @ApiOkResponse({
     type: GetOneUserResponseDto,
     description: "The user has been successfully modified",
@@ -84,7 +128,7 @@ export class UsersController {
     @Body() updateUsersDto: UpdateUserDto,
   ): Promise<GetOneUserResponseDto> {
     try {
-      const user = await this.userService.update(userId, updateUsersDto);
+      const user = await this.usersService.update(userId, updateUsersDto);
       return new GetOneUserResponseDto({
         data: user,
         message: "Successfully retrieved user",
@@ -109,7 +153,7 @@ export class UsersController {
   })
   async delete(@Param("id") userId: string): Promise<ResponseMetadataDto> {
     try {
-      await this.userService.delete(userId);
+      await this.usersService.delete(userId);
       return new ResponseMetadataDto({
         message: "Successfully deleted user",
         status: ResponseStatus.ERROR,
@@ -125,13 +169,14 @@ export class UsersController {
     }
   }
 
-  @Put(":id/kyc-files")
+  @Put("profile/kyc-files")
+  @UseRoles(Role.CLIENT)
   @ApiOkResponse({
     type: GetOneUserResponseDto,
     description: "Successfully uploaded user KYC images",
   })
   @UseInterceptors(FileInterceptor("file"))
-  async uploadKYCImages(@Param("id") userId: string, @UploadedFiles() files) {
+  async uploadKYCImages(@Req() req: Request, @UploadedFiles() files) {
     try {
       const imageIds = [];
       for (const file of files) {
@@ -139,7 +184,7 @@ export class UsersController {
         imageIds.push(image._id);
       }
 
-      const user = await this.userService.addKYCImages(userId, imageIds);
+      const user = await this.usersService.addKYCImages(req.user.id, imageIds);
       return new GetOneUserResponseDto({
         data: user,
         message: "Successfully uploaded user KYC images",

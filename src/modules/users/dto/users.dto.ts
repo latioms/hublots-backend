@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
+  IsJWT,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -144,6 +145,13 @@ export class RegisterUserResponseDto extends ResponseMetadataDto {
   @ValidateNested()
   @Type(() => UserDto)
   data: UserDto;
+
+  @ApiProperty({
+    description: "Valid access token",
+    required: true,
+  })
+  @IsJWT()
+  accessToken: string;
 
   constructor(responseBody: RegisterUserResponseDto) {
     super(responseBody);
