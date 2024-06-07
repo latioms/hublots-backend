@@ -52,7 +52,7 @@ export class User extends Document {
     required: true,
     default: [Role.CLIENT],
   })
-  role: Role[];
+  roles: Role[];
 
   @Prop({
     type: String,
@@ -104,3 +104,9 @@ export class User extends Document {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+declare module "express" {
+  export interface Request {
+    user?: User;
+  }
+}

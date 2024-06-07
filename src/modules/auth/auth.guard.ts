@@ -8,8 +8,9 @@ import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { UsersService } from "src/modules/users/users.service";
+import { Role } from "../users/dto";
+import { User } from "../users/schema/users.schema";
 import { PUBLIC_KEY, ROLES_KEY } from "./decorator/auth.decorator";
-import { Role, UserDto } from "../users/dto";
 
 @Injectable()
 export class AuthenticatorGuard implements CanActivate {
@@ -36,7 +37,7 @@ export class AuthenticatorGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    let authenticatedUser: UserDto;
+    let authenticatedUser: User;
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_KEY,

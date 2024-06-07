@@ -4,7 +4,7 @@ import * as bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { BulkQueryDto } from "../dto/response.dto";
-import { CreateUserDto, UpdateUserDto, UserDto } from "./dto/users.dto";
+import { CreateUserDto, UpdateUserDto } from "./dto/users.dto";
 import { User } from "./schema/users.schema";
 
 export class UsersService {
@@ -12,34 +12,31 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
-  async register(userData: CreateUserDto): Promise<UserDto> {
-    const createdUser = await new this.userModel({
+  async register(userData: CreateUserDto): Promise<User> {
+    const newUser = new this.userModel({
       ...userData,
       password: bcrypt.hashSync(
         userData.password,
         parseInt(process.env.SALT_ROUND_DCRIPT),
       ),
-    }).save();
-    return new UserDto(createdUser.toJSON());
+    });
+    return newUser.save();
   }
 
-  async findOne(userId: string): Promise<UserDto> {
-    const user = await this.userModel.findById(userId).exec();
-    return new UserDto(user.toJSON());
+  async findOne(userId: string): Promise<User> {
+    return this.userModel.findById(userId).exec();
   }
 
-  async findByEmail(email: string): Promise<UserDto> {
-    const user = await this.userModel.findOne({ email }).exec();
-    return new UserDto(user.toJSON());
+  async findByEmail(email: string): Promise<User> {
+    return this.userModel.findOne({ email }).exec();
   }
 
-  async findAll(query: BulkQueryDto): Promise<UserDto[]> {
-    const users = await this.userModel
+  async findAll(query: BulkQueryDto): Promise<User[]> {
+    return this.userModel
       .find()
       .limit(query.perpage ?? 10)
       .skip(query.page ?? 1)
       .exec();
-    return users.map((user) => new UserDto(user.toJSON()));
   }
 
   async delete(userId: string): Promise<void> {
@@ -47,21 +44,20 @@ export class UsersService {
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
   }
 
-  async update(userId: string, data: UpdateUserDto): Promise<UserDto> {
-    const user = await this.userModel
+  async update(userId: string, data: UpdateUserDto): Promise<User> {
+    return this.userModel
       .findByIdAndUpdate(
         userId,
         { ...data, updatedAt: new Date() },
         { new: true },
       )
       .exec();
-    return new UserDto(user.toJSON());
   }
 
-  async addKYCImages(userId: string, imageIds: string[]): Promise<UserDto> {
+  async addKYCImages(userId: string, imageIds: string[]): Promise<User> {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
     user.kycImages.push(...imageIds.map((id) => new ObjectId(id)));
-    return new UserDto(user.toJSON());
+    return user.save();
   }
 }

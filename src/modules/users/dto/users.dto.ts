@@ -197,9 +197,3 @@ export class GoogleSignInDto {
   @IsString()
   socialMode: string;
 }
-
-declare module "express" {
-  export interface Request {
-    user?: UserDto;
-  }
-}

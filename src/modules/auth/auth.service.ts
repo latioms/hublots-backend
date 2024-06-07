@@ -2,7 +2,8 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { jwtConstants } from "../../constants/constants";
-import { CreateUserDto, UserDto } from "../users/dto";
+import { CreateUserDto } from "../users/dto";
+import { User } from "../users/schema/users.schema";
 import { UsersService } from "../users/users.service";
 
 @Injectable()
@@ -37,12 +38,12 @@ export class AuthService {
   async validateUser(
     username: string,
     password: string,
-  ): Promise<Omit<UserDto, "password">> {
+  ): Promise<Omit<User, "password">> {
     const user = await this.usersService.findByEmail(username);
     if (user && user.password === password) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
-      return result;
+      return result as Omit<User, "password">;
     }
     return null;
   }

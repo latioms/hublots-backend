@@ -11,6 +11,7 @@ import {
   CreateUserDto,
   GoogleSignInDto,
   RegisterUserResponseDto,
+  UserDto,
 } from "../users/dto/users.dto";
 import { AuthService } from "./auth.service";
 import { Public } from "./decorator/auth.decorator";
@@ -72,8 +73,8 @@ export class AuthController {
       const { accessToken, user } =
         await this.authService.singUp(createUserDto);
       return new RegisterUserResponseDto({
-        data: user,
         accessToken,
+        data: new UserDto(user.toJSON()),
         status: ResponseStatus.SUCCESS,
         message: "Successfully register user",
       });

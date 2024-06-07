@@ -30,6 +30,7 @@ import {
   GetOneUserResponseDto,
   Role,
   UpdateUserDto,
+  UserDto,
 } from "./dto/users.dto";
 import { UsersService } from "./users.service";
 
@@ -51,7 +52,7 @@ export class UsersController {
   async findAll(@Query() query: BulkQueryDto): Promise<GetAllUserResponseDto> {
     const users = await this.usersService.findAll(query);
     return new GetAllUserResponseDto({
-      data: users,
+      data: users.map((user) => new UserDto(user.toJSON())),
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
       status: ResponseStatus.SUCCESS,
@@ -70,14 +71,13 @@ export class UsersController {
     const user = await this.usersService.findOne(userId);
 
     return new GetOneUserResponseDto({
-      data: user,
+      data: new UserDto(user.toJSON()),
       message: "Successfully retrieved user",
       status: ResponseStatus.SUCCESS,
     });
   }
 
   @Get("profile")
-  @UseGuards(AuthenticatorGuard)
   @ApiOkResponse({
     type: GetOneUserResponseDto,
     description: "Successful user registration",
@@ -102,7 +102,7 @@ export class UsersController {
     try {
       const user = await this.usersService.update(req.user.id, updateUsersDto);
       return new GetOneUserResponseDto({
-        data: user,
+        data: new UserDto(user.toJSON()),
         message: "Successfully retrieved user",
         status: ResponseStatus.SUCCESS,
       });
@@ -130,7 +130,7 @@ export class UsersController {
     try {
       const user = await this.usersService.update(userId, updateUsersDto);
       return new GetOneUserResponseDto({
-        data: user,
+        data: new UserDto(user.toJSON()),
         message: "Successfully retrieved user",
         status: ResponseStatus.SUCCESS,
       });
@@ -186,7 +186,7 @@ export class UsersController {
 
       const user = await this.usersService.addKYCImages(req.user.id, imageIds);
       return new GetOneUserResponseDto({
-        data: user,
+        data: new UserDto(user.toJSON()),
         message: "Successfully uploaded user KYC images",
         status: ResponseStatus.SUCCESS,
       });
