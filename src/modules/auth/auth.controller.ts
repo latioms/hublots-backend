@@ -1,12 +1,5 @@
-import {
-  Body,
-  Controller,
-  HttpException,
-  HttpStatus,
-  Post,
-} from "@nestjs/common";
+import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
 import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
-import { ResponseMetadataDto, ResponseStatus } from "../dto";
 import {
   CreateUserDto,
   GoogleSignInDto,
@@ -40,7 +33,7 @@ export class AuthController {
     return new SignInResponseDto({
       accessToken,
       message: "User Successfully signed in",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -56,7 +49,7 @@ export class AuthController {
     return new SignInResponseDto({
       accessToken,
       message: "Successfully signed user in",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -69,23 +62,12 @@ export class AuthController {
   async register(
     @Body() createUserDto: CreateUserDto,
   ): Promise<RegisterUserResponseDto> {
-    try {
-      const { accessToken, user } =
-        await this.authService.singUp(createUserDto);
-      return new RegisterUserResponseDto({
-        accessToken,
-        data: new UserDto(user.toJSON()),
-        status: ResponseStatus.SUCCESS,
-        message: "Successfully register user",
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const { accessToken, user } = await this.authService.singUp(createUserDto);
+    return new RegisterUserResponseDto({
+      accessToken,
+      data: new UserDto(user.toJSON()),
+      status: HttpStatus.CREATED,
+      message: "Successfully register user",
+    });
   }
 }

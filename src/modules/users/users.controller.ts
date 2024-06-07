@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Put,
@@ -16,6 +15,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
@@ -23,7 +23,7 @@ import {
 import { Request } from "express";
 import { AuthenticatorGuard } from "../auth/auth.guard";
 import { UseRoles } from "../auth/decorator/auth.decorator";
-import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
+import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { FileUploadService } from "../files/file-upload.service";
 import {
   GetAllUserResponseDto,
@@ -55,12 +55,13 @@ export class UsersController {
       data: users.map((user) => new UserDto(user.toJSON())),
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
       message: "Successfully retrieved users",
     });
   }
 
   @Get(":id")
+  @UseRoles(Role.ADMIN, Role.SUPPORT)
   @ApiOkResponse({
     type: GetOneUserResponseDto,
     description: "User information successfully retrieved",
@@ -73,7 +74,7 @@ export class UsersController {
     return new GetOneUserResponseDto({
       data: new UserDto(user.toJSON()),
       message: "Successfully retrieved user",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -84,9 +85,9 @@ export class UsersController {
   })
   async getProfile(@Req() req: Request): Promise<GetOneUserResponseDto> {
     return new GetOneUserResponseDto({
-      data: req.user,
+      data: new UserDto(req.user.toJSON()),
       message: "Successfully retrieved user profile",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -99,22 +100,12 @@ export class UsersController {
     @Req() req: Request,
     @Body() updateUsersDto: UpdateUserDto,
   ): Promise<GetOneUserResponseDto> {
-    try {
-      const user = await this.usersService.update(req.user.id, updateUsersDto);
-      return new GetOneUserResponseDto({
-        data: new UserDto(user.toJSON()),
-        message: "Successfully retrieved user",
-        status: ResponseStatus.SUCCESS,
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const user = await this.usersService.update(req.user.id, updateUsersDto);
+    return new GetOneUserResponseDto({
+      data: new UserDto(user.toJSON()),
+      message: "Successfully retrieved user",
+      status: HttpStatus.OK,
+    });
   }
 
   @Put(":id")
@@ -127,46 +118,26 @@ export class UsersController {
     @Param("id") userId: string,
     @Body() updateUsersDto: UpdateUserDto,
   ): Promise<GetOneUserResponseDto> {
-    try {
-      const user = await this.usersService.update(userId, updateUsersDto);
-      return new GetOneUserResponseDto({
-        data: new UserDto(user.toJSON()),
-        message: "Successfully retrieved user",
-        status: ResponseStatus.SUCCESS,
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const user = await this.usersService.update(userId, updateUsersDto);
+    return new GetOneUserResponseDto({
+      data: new UserDto(user.toJSON()),
+      message: "Successfully retrieved user",
+      status: HttpStatus.OK,
+    });
   }
 
   @Delete(":id")
   @UseRoles(Role.ADMIN)
-  @ApiOkResponse({
+  @ApiNoContentResponse({
     type: ResponseMetadataDto,
     description: "User successfully deleted",
   })
   async delete(@Param("id") userId: string): Promise<ResponseMetadataDto> {
-    try {
-      await this.usersService.delete(userId);
-      return new ResponseMetadataDto({
-        message: "Successfully deleted user",
-        status: ResponseStatus.ERROR,
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    await this.usersService.delete(userId);
+    return new ResponseMetadataDto({
+      message: "Successfully deleted user",
+      status: HttpStatus.NO_CONTENT,
+    });
   }
 
   @Put("profile/kyc-files")
@@ -177,27 +148,17 @@ export class UsersController {
   })
   @UseInterceptors(FileInterceptor("file"))
   async uploadKYCImages(@Req() req: Request, @UploadedFiles() files) {
-    try {
-      const imageIds = [];
-      for (const file of files) {
-        const image = await this.fileUploadService.uploadImage(file);
-        imageIds.push(image._id);
-      }
-
-      const user = await this.usersService.addKYCImages(req.user.id, imageIds);
-      return new GetOneUserResponseDto({
-        data: new UserDto(user.toJSON()),
-        message: "Successfully uploaded user KYC images",
-        status: ResponseStatus.SUCCESS,
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    const imageIds = [];
+    for (const file of files) {
+      const image = await this.fileUploadService.uploadImage(file);
+      imageIds.push(image._id);
     }
+
+    const user = await this.usersService.addKYCImages(req.user.id, imageIds);
+    return new GetOneUserResponseDto({
+      data: new UserDto(user.toJSON()),
+      message: "Successfully uploaded user KYC images",
+      status: HttpStatus.OK,
+    });
   }
 }
