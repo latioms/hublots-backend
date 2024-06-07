@@ -7,14 +7,14 @@ import {
   GoogleSignInDto,
   Locale,
 } from "../../users/dto/users.dto";
-import { UserService } from "../../users/users.service";
+import { UsersService } from "../../users/users.service";
 
 @Injectable()
-export class SocialAuthService {
+export class GoogleAuthService {
   private google: OAuth2Client;
 
   constructor(
-    private userService: UserService,
+    private userService: UsersService,
     private readonly jwtService: JwtService,
   ) {
     this.google = new OAuth2Client(

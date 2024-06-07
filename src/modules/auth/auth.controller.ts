@@ -1,35 +1,28 @@
 import {
   Body,
   Controller,
-  Get,
   HttpException,
   HttpStatus,
   Post,
-  Req,
-  UseGuards,
 } from "@nestjs/common";
 import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
 import { ResponseMetadataDto, ResponseStatus } from "../dto";
 import {
-  GetOneUserResponseDto,
-  RegisterUserResponseDto,
+  CreateUserDto,
   GoogleSignInDto,
-  UserDto,
+  RegisterUserResponseDto,
 } from "../users/dto/users.dto";
-import { UserService } from "../users/users.service";
-import { AuthenticatorGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
-import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
-import { SocialAuthService } from "./google/google-auth.service";
 import { Public } from "./decorator/auth.decorator";
+import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
+import { GoogleAuthService } from "./google/google-auth.service";
 
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private userService: UserService,
-    private authGuard: SocialAuthService,
+    private authGuard: GoogleAuthService,
   ) {}
 
   @ApiCreatedResponse({
@@ -66,23 +59,6 @@ export class AuthController {
     });
   }
 
-  @Get("profile")
-  @UseGuards(AuthenticatorGuard)
-  @ApiCreatedResponse({
-    type: GetOneUserResponseDto,
-    description: "Successful user registration",
-  })
-  async getProfile(@Req() req): Promise<GetOneUserResponseDto> {
-    const authUser = await this.userService.update(req.user._id, {
-      isOnline: true,
-    });
-    return new GetOneUserResponseDto({
-      data: authUser,
-      message: "Successfully retrieved user profile",
-      status: ResponseStatus.SUCCESS,
-    });
-  }
-
   @Public()
   @Post("register")
   @ApiCreatedResponse({
@@ -90,12 +66,14 @@ export class AuthController {
     description: "Successful user registration",
   })
   async register(
-    @Body() createUserDto: UserDto,
+    @Body() createUserDto: CreateUserDto,
   ): Promise<RegisterUserResponseDto> {
     try {
-      const user = await this.userService.register(createUserDto);
+      const { accessToken, user } =
+        await this.authService.singUp(createUserDto);
       return new RegisterUserResponseDto({
         data: user,
+        accessToken,
         status: ResponseStatus.SUCCESS,
         message: "Successfully register user",
       });

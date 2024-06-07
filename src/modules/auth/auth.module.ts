@@ -7,7 +7,7 @@ import { jwtConstants } from "../../constants/constants";
 import { AuthenticatorGuard } from "./auth.guard";
 import { APP_GUARD } from "@nestjs/core";
 import { PassportModule } from "@nestjs/passport";
-import { SocialAuthService } from "./google/google-auth.service";
+import { GoogleAuthService } from "./google/google-auth.service";
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { SocialAuthService } from "./google/google-auth.service";
   ],
   providers: [
     AuthService,
-    SocialAuthService,
+    GoogleAuthService,
     {
       provide: APP_GUARD,
       useClass: AuthenticatorGuard,

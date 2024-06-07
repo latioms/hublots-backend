@@ -7,7 +7,7 @@ import {
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { UserService } from "src/modules/users/users.service";
+import { UsersService } from "src/modules/users/users.service";
 import { PUBLIC_KEY, ROLES_KEY } from "./decorator/auth.decorator";
 import { Role, UserDto } from "../users/dto";
 
@@ -16,7 +16,7 @@ export class AuthenticatorGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private jwtService: JwtService,
-    private userService: UserService,
+    private usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -42,7 +42,9 @@ export class AuthenticatorGuard implements CanActivate {
         secret: process.env.JWT_KEY,
       });
 
-      authenticatedUser = await this.userService.findByEmail(payload?.username);
+      authenticatedUser = await this.usersService.findByEmail(
+        payload?.username,
+      );
     } catch {
       throw new UnauthorizedException();
     }
