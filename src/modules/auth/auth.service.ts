@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { jwtConstants } from "../../constants/constants";
@@ -19,6 +23,8 @@ export class AuthService {
       throw new UnauthorizedException(
         "Incorrect email or password, please check your connection settings",
       );
+    } else if (!user.isActive) {
+      throw new ForbiddenException("User account was disactivated !!!");
     }
     const payload = { username: user.email };
     return this.jwtService.sign(payload, {
@@ -40,7 +46,7 @@ export class AuthService {
     password: string,
   ): Promise<Omit<User, "password">> {
     const user = await this.usersService.findByEmail(username);
-    if (user && user.password === password) {
+    if (user?.isActive && bcrypt.compareSync(password, user.password)) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result as Omit<User, "password">;
