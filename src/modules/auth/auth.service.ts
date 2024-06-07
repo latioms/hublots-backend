@@ -7,8 +7,9 @@ import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { jwtConstants } from "../../constants/constants";
 import { CreateUserDto } from "../users/dto";
-import { User } from "../users/schema/users.schema";
+import { User } from "../users/schema/user.schema";
 import { UsersService } from "../users/users.service";
+import { Request } from "express";
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,8 @@ export class AuthService {
     } else if (!user.isActive) {
       throw new ForbiddenException("User account was disactivated !!!");
     }
-    const payload = { username: user.email };
+    const log = await this.usersService.createSignInLog(user._id as string);
+    const payload = { username: user.email, logId: log._id };
     return this.jwtService.sign(payload, {
       secret: jwtConstants.secret,
     });
@@ -52,5 +54,16 @@ export class AuthService {
       return result as Omit<User, "password">;
     }
     return null;
+  }
+
+  async signOut(req: Request) {
+    const [type, token] = req.headers.authorization?.split(" ") ?? [];
+    const accessToken = type === "Bearer" ? token : undefined;
+    if (accessToken) {
+      const payload = await this.jwtService.verifyAsync(accessToken, {
+        secret: process.env.JWT_KEY,
+      });
+      await this.usersService.createSignOutLog(payload.logId);
+    }
   }
 }

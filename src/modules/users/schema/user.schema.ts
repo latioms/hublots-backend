@@ -97,6 +97,10 @@ export class User extends Document {
   @Prop({ type: [{ type: Types.ObjectId, ref: "Image", required: true }] })
   kycImages: Types.ObjectId[];
 
+  //reference to logs
+  @Prop({ type: [{ type: Types.ObjectId, ref: "Log", required: true }] })
+  logs: Types.ObjectId[];
+
   toJSON() {
     const user = this.toObject();
     user.id = user._id;

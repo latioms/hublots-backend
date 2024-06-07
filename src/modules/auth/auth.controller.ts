@@ -1,5 +1,16 @@
-import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
-import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpStatus,
+  Post,
+  Req,
+} from "@nestjs/common";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import {
   CreateUserDto,
   GoogleSignInDto,
@@ -10,6 +21,8 @@ import { AuthService } from "./auth.service";
 import { Public } from "./decorator/auth.decorator";
 import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
 import { GoogleAuthService } from "./google/google-auth.service";
+import { Request } from "express";
+import { ResponseMetadataDto } from "../dto";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -68,6 +81,19 @@ export class AuthController {
       data: new UserDto(user.toJSON()),
       status: HttpStatus.CREATED,
       message: "Successfully register user",
+    });
+  }
+
+  @Delete("/sign-out")
+  @ApiNoContentResponse({
+    type: ResponseMetadataDto,
+    description: "Logout successfully",
+  })
+  async signOut(@Req() req: Request) {
+    await this.authService.signOut(req);
+    return new ResponseMetadataDto({
+      message: "Successfully deleted user",
+      status: HttpStatus.NO_CONTENT,
     });
   }
 }

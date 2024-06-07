@@ -10,10 +10,12 @@ import {
   UpdateProfileDto,
   VerificationStatus,
 } from "./dto/users.dto";
-import { User } from "./schema/users.schema";
+import { User } from "./schema/user.schema";
+import { Log } from "./schema/log.schema";
 
 export class UsersService {
   constructor(
+    @InjectModel(Log.name) private readonly logModel: Model<Log>,
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
@@ -73,5 +75,24 @@ export class UsersService {
     //FIXME: sent default password to user
     const password = "default-password";
     return this.register({ ...account, password });
+  }
+
+  async createSignInLog(userId: string): Promise<Log> {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
+    const log = await new this.logModel().save();
+    user.logs.push(new ObjectId(log._id as string));
+    await user.save();
+    return log;
+  }
+
+  async createSignOutLog(logId: string) {
+    await this.logModel
+      .findByIdAndUpdate(logId, { logoutAt: new Date() })
+      .exec();
+  }
+
+  async findUserLog(logId: string): Promise<Log> {
+    return this.logModel.findById(logId).exec();
   }
 }

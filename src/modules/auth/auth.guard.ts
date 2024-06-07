@@ -9,7 +9,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import { UsersService } from "src/modules/users/users.service";
 import { Role } from "../users/dto";
-import { User } from "../users/schema/users.schema";
+import { User } from "../users/schema/user.schema";
 import { PUBLIC_KEY, ROLES_KEY } from "./decorator/auth.decorator";
 
 @Injectable()
@@ -43,9 +43,12 @@ export class AuthenticatorGuard implements CanActivate {
         secret: process.env.JWT_KEY,
       });
 
-      authenticatedUser = await this.usersService.findByEmail(
-        payload?.username,
-      );
+      const log = await this.usersService.findUserLog(payload.logId);
+      if (!log.logoutAt) {
+        authenticatedUser = await this.usersService.findByEmail(
+          payload?.username,
+        );
+      }
     } catch {
       throw new UnauthorizedException();
     }
