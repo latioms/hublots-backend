@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { Locale, Role, UserDto } from "../dto/users.dto";
+import { Locale, Role, UserDto, VerificationStatus } from "../dto/users.dto";
 
 @Schema()
 export class User extends Document {
@@ -25,11 +25,12 @@ export class User extends Document {
   phoneNumber: string;
 
   @Prop({
-    type: Boolean,
+    type: String,
+    enum: VerificationStatus,
     required: true,
-    default: false,
+    default: VerificationStatus.NOT_SUBMITTED,
   })
-  isVerified: boolean;
+  verificationStatus: VerificationStatus;
 
   @Prop({
     type: Boolean,
@@ -65,6 +66,13 @@ export class User extends Document {
     required: true,
   })
   password: string;
+
+  @Prop({
+    type: Boolean,
+    required: true,
+    default: true,
+  })
+  isActive: boolean;
 
   @Prop({
     type: Date,

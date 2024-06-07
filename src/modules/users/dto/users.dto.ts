@@ -29,6 +29,13 @@ export enum Role {
   ADMIN = "admin",
 }
 
+export enum VerificationStatus {
+  NOT_SUBMITTED = "Not submitted",
+  SUBMITTED = "Submitted",
+  VERIFIED = "Verified",
+  NOT_VERIFIED = "Not Verified",
+}
+
 export class CreateUserDto {
   @ApiProperty({
     example: "Wonder",
@@ -52,9 +59,9 @@ export class CreateUserDto {
   @IsPhoneNumber()
   phoneNumber: string;
 
-  @IsBoolean()
   @IsOptional()
-  isVerified: boolean = false;
+  @IsEnum(VerificationStatus)
+  verificationStatus: VerificationStatus = VerificationStatus.NOT_SUBMITTED;
 
   @IsBoolean()
   @IsOptional()
@@ -142,6 +149,10 @@ export class UserDto extends CreateUserDto {
   @IsEnum(Role, { each: true })
   roles: Role[];
 
+  @IsBoolean()
+  @ApiProperty()
+  isActive: boolean = true;
+
   constructor(user: UserDto) {
     super(user);
     Object.assign(this, user);
@@ -149,7 +160,7 @@ export class UserDto extends CreateUserDto {
 }
 
 export class UpdateUserDto extends PartialType(
-  OmitType(UserDto, ["password", "email", "isVerified"] as const),
+  OmitType(UserDto, ["password", "email", "verificationStatus"] as const),
 ) {}
 
 export class RegisterUserResponseDto extends ResponseMetadataDto {

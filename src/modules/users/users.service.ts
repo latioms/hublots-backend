@@ -8,6 +8,7 @@ import {
   CreateAccountDto,
   CreateUserDto,
   UpdateUserDto,
+  VerificationStatus,
 } from "./dto/users.dto";
 import { User } from "./schema/users.schema";
 
@@ -64,6 +65,7 @@ export class UsersService {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
     user.kycImages.push(...imageIds.map((id) => new ObjectId(id)));
+    user.verificationStatus = VerificationStatus.SUBMITTED;
     return user.save();
   }
 
