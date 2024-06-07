@@ -64,24 +64,6 @@ export class UsersController {
     });
   }
 
-  @Get(":id")
-  @UseRoles(Role.ADMIN, Role.SUPPORT)
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "User information successfully retrieved",
-  })
-  @ApiNotFoundResponse({ description: "User not found" })
-  @ApiBadRequestResponse({ description: "Invalid user ID" })
-  async findOne(@Param("id") userId: string): Promise<GetOneUserResponseDto> {
-    const user = await this.usersService.findOne(userId);
-
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
-      message: "Successfully retrieved user",
-      status: HttpStatus.OK,
-    });
-  }
-
   @Get("profile")
   @ApiOkResponse({
     type: GetOneUserResponseDto,
@@ -105,6 +87,24 @@ export class UsersController {
     @Body() updateUsersDto: UpdateUserDto,
   ): Promise<GetOneUserResponseDto> {
     const user = await this.usersService.update(req.user.id, updateUsersDto);
+    return new GetOneUserResponseDto({
+      data: new UserDto(user.toJSON()),
+      message: "Successfully retrieved user",
+      status: HttpStatus.OK,
+    });
+  }
+
+  @Get(":id")
+  @UseRoles(Role.ADMIN, Role.SUPPORT)
+  @ApiOkResponse({
+    type: GetOneUserResponseDto,
+    description: "User information successfully retrieved",
+  })
+  @ApiNotFoundResponse({ description: "User not found" })
+  @ApiBadRequestResponse({ description: "Invalid user ID" })
+  async findOne(@Param("id") userId: string): Promise<GetOneUserResponseDto> {
+    const user = await this.usersService.findOne(userId);
+
     return new GetOneUserResponseDto({
       data: new UserDto(user.toJSON()),
       message: "Successfully retrieved user",
