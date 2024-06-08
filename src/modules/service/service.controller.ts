@@ -9,7 +9,6 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
@@ -20,7 +19,6 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { AuthenticatorGuard } from "../auth/auth.guard";
 import { Public, UseRoles } from "../auth/decorator/auth.decorator";
 import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { Role } from "../users/dto";
@@ -34,7 +32,6 @@ import { ServiceService } from "./service.service";
 
 @ApiTags("Services")
 @Controller("services")
-@UseGuards(AuthenticatorGuard)
 export class ServiceController {
   constructor(private serviceService: ServiceService) {}
 

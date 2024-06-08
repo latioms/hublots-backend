@@ -56,14 +56,42 @@ export class AuthService {
     return null;
   }
 
-  async signOut(req: Request) {
-    const [type, token] = req.headers.authorization?.split(" ") ?? [];
-    const accessToken = type === "Bearer" ? token : undefined;
+  async signOut(request: Request) {
+    const accessToken = this.extractTokenFromHeader(request);
+
     if (accessToken) {
       const payload = await this.jwtService.verifyAsync(accessToken, {
         secret: process.env.JWT_KEY,
       });
       await this.usersService.createSignOutLog(payload.logId);
     }
+  }
+
+  async authorizeUser(request: Request) {
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: process.env.JWT_KEY,
+    });
+
+    let authorizedUser: User;
+    const log = await this.usersService.findUserLog(payload.logId);
+    if (!log.logoutAt) {
+      authorizedUser = await this.usersService.findByEmail(payload?.username);
+    }
+
+    if (!authorizedUser) {
+      throw new UnauthorizedException();
+    }
+
+    return authorizedUser;
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(" ") ?? [];
+    return type === "Bearer" ? token : undefined;
   }
 }

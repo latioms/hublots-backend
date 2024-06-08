@@ -11,7 +11,6 @@ import {
   Query,
   Req,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -24,7 +23,6 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { AuthenticatorGuard } from "../auth/auth.guard";
 import { UseRoles } from "../auth/decorator/auth.decorator";
 import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { FileUploadService } from "../files/file-upload.service";
@@ -41,7 +39,6 @@ import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
-@UseGuards(AuthenticatorGuard)
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,

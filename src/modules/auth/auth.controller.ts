@@ -11,6 +11,8 @@ import {
   ApiNoContentResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { Request } from "express";
+import { ResponseMetadataDto } from "../dto";
 import {
   CreateUserDto,
   GoogleSignInDto,
@@ -21,8 +23,6 @@ import { AuthService } from "./auth.service";
 import { Public } from "./decorator/auth.decorator";
 import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
 import { GoogleAuthService } from "./google/google-auth.service";
-import { Request } from "express";
-import { ResponseMetadataDto } from "../dto";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -32,12 +32,12 @@ export class AuthController {
     private authGuard: GoogleAuthService,
   ) {}
 
+  @Public()
+  @Post("login")
   @ApiCreatedResponse({
     type: SignInResponseDto,
     description: "User Successfully signed in",
   })
-  @Public()
-  @Post("login")
   async signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
     const accessToken = await this.authService.signIn(
       signInDto.email,
@@ -50,11 +50,12 @@ export class AuthController {
     });
   }
 
+  @Public()
+  @Post("google-login")
   @ApiCreatedResponse({
     type: SignInResponseDto,
     description: "Successful user registration",
   })
-  @Post("google-login")
   async googleSignIn(
     @Body() signInDto: GoogleSignInDto,
   ): Promise<SignInResponseDto> {

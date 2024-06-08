@@ -1,12 +1,10 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthenticatorGuard } from "../auth/auth.guard";
 import { User, UserSchema } from "./schema/user.schema";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 
+import { AuthService } from "../auth/auth.service";
 import { FileUploadModule } from "../files/file-upload.module";
 import { Log, LogSchema } from "./schema/log.schema";
 
@@ -19,14 +17,7 @@ import { Log, LogSchema } from "./schema/log.schema";
     ]),
   ],
   controllers: [UsersController],
-  providers: [
-    UsersService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthenticatorGuard,
-    },
-    JwtService,
-  ],
+  providers: [UsersService, AuthService],
   exports: [UsersService],
 })
 export class UsersModule {}

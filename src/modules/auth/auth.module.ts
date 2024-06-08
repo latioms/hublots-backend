@@ -1,12 +1,10 @@
 import { Module } from "@nestjs/common";
-import { AuthService } from "./auth.service";
-import { UsersModule } from "../users/users.module";
 import { JwtModule } from "@nestjs/jwt";
-import { AuthController } from "./auth.controller";
-import { jwtConstants } from "../../constants/constants";
-import { AuthenticatorGuard } from "./auth.guard";
-import { APP_GUARD } from "@nestjs/core";
 import { PassportModule } from "@nestjs/passport";
+import { jwtConstants } from "../../constants/constants";
+import { UsersModule } from "../users/users.module";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
 import { GoogleAuthService } from "./google/google-auth.service";
 
 @Module({
@@ -19,14 +17,7 @@ import { GoogleAuthService } from "./google/google-auth.service";
     }),
     PassportModule,
   ],
-  providers: [
-    AuthService,
-    GoogleAuthService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthenticatorGuard,
-    },
-  ],
+  providers: [AuthService, GoogleAuthService],
   controllers: [AuthController],
   exports: [AuthService],
 })

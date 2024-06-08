@@ -9,6 +9,8 @@ import { ChatModule } from "./modules/chat/chat.module";
 import { ServiceModule } from "./modules/service/service.module";
 import { PaymentModule } from "./modules/payment/payment.module";
 import { OrderModule } from "./modules/order/order.module";
+import { APP_GUARD } from "@nestjs/core";
+import { AuthorizationGuard } from "./modules/auth/auth.guard";
 
 @Module({
   imports: [
@@ -24,6 +26,12 @@ import { OrderModule } from "./modules/order/order.module";
     OrderModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthorizationGuard,
+    },
+  ],
 })
 export class AppModule {}
