@@ -57,7 +57,7 @@ export class ServiceController {
   ): Promise<GetAllServiceResponseDto> {
     const services = await this.serviceService.findAll(query);
     return new GetAllServiceResponseDto({
-      data: services,
+      data: services.map((service) => new ServiceDto(service.toJSON())),
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
       status: HttpStatus.OK,
@@ -96,10 +96,10 @@ export class ServiceController {
       newService.mainImageId = image.id;
     }
 
-    const createdService = await this.serviceService.create(newService);
+    const service = await this.serviceService.create(newService);
 
     return new AddServiceResponseDto({
-      data: createdService,
+      data: new ServiceDto(service.toJSON()),
       message: "Service Created Sucessfully",
       status: HttpStatus.CREATED,
     });
@@ -117,7 +117,7 @@ export class ServiceController {
   ): Promise<GetOneServiceResponseDto> {
     const service = await this.serviceService.findOne(serviceId); // Call the findOne method with the serviceId parameter
     return new GetOneServiceResponseDto({
-      data: service,
+      data: new ServiceDto(service.toJSON()),
       message: "Successfully retrieved service",
       status: HttpStatus.OK,
     });

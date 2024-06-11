@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { BulkQueryDto } from "../dto/response.dto";
-import { CreateServiceDto, ServiceDto, UpdateServiceDto } from "./dto";
+import { CreateServiceDto, UpdateServiceDto } from "./dto";
 import { Service } from "./schema/service.schema";
 
 @Injectable()
@@ -12,27 +12,24 @@ export class ServiceService {
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
   ) {}
 
-  async create(data: CreateServiceDto): Promise<ServiceDto> {
-    const createdService = await new this.serviceModel({
+  async create(data: CreateServiceDto): Promise<Service> {
+    return new this.serviceModel({
       ...data,
       updatedAt: new Date(),
       createdAt: new Date(),
     }).save();
-    return new ServiceDto(createdService.toJSON());
   }
 
-  async findOne(serviceId: string): Promise<ServiceDto> {
-    const service = await this.serviceModel.findById(serviceId).exec();
-    return new ServiceDto(service.toJSON());
+  async findOne(serviceId: string): Promise<Service> {
+    return this.serviceModel.findById(serviceId).exec();
   }
 
-  async findAll(query: BulkQueryDto): Promise<ServiceDto[]> {
-    const service = await this.serviceModel
+  async findAll(query: BulkQueryDto): Promise<Service[]> {
+    return this.serviceModel
       .find()
       .limit(query.perpage ?? 10)
       .skip(query.page ?? 1)
       .exec();
-    return service.map((service) => new ServiceDto(service.toJSON()));
   }
 
   async delete(serviceId: string): Promise<void> {
@@ -41,15 +38,14 @@ export class ServiceService {
       throw new NotFoundException(`service with id ${serviceId} not found`);
   }
 
-  async update(serviceId: string, data: UpdateServiceDto): Promise<ServiceDto> {
-    const service = await this.serviceModel
+  async update(serviceId: string, data: UpdateServiceDto): Promise<Service> {
+    return this.serviceModel
       .findByIdAndUpdate(
         serviceId,
         { ...data, updatedAt: new Date() },
         { new: true },
       )
       .exec();
-    return new ServiceDto(service.toJSON());
   }
 
   async addImages(serviceId: string, imageIds: string[]): Promise<Service> {
