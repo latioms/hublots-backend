@@ -43,6 +43,10 @@ export class Service extends Document {
   })
   category: Category;
 
+  // reference to main image
+  @Prop({ type: Types.ObjectId, ref: "Image", required: true })
+  mainImageId: Types.ObjectId;
+
   //reference to offers
   @Prop({ type: [{ type: Types.ObjectId, ref: "Offer", required: true }] })
   offers: Types.ObjectId[];

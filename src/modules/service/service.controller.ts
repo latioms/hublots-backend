@@ -7,11 +7,16 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   Req,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -27,13 +32,19 @@ import {
   CreateServiceDto,
   GetAllServiceResponseDto,
   GetOneServiceResponseDto,
+  ServiceDto,
 } from "./dto/service.dto";
 import { ServiceService } from "./service.service";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { FileUploadService } from "../files/file-upload.service";
 
 @ApiTags("Services")
 @Controller("services")
 export class ServiceController {
-  constructor(private serviceService: ServiceService) {}
+  constructor(
+    private serviceService: ServiceService,
+    private fileUploadService: FileUploadService,
+  ) {}
 
   @Get()
   @Public()
@@ -55,12 +66,15 @@ export class ServiceController {
   }
 
   @Post("new")
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("file"))
   @UseRoles(Role.PROVIDER, Role.SUPPORT)
   @ApiCreatedResponse({
     type: AddServiceResponseDto,
     description: "Service Created Sucessfully",
   })
   async create(
+    @UploadedFile() file,
     @Req() request: Request,
     @Body() createServiceDto: CreateServiceDto,
   ): Promise<AddServiceResponseDto> {
@@ -71,14 +85,21 @@ export class ServiceController {
       throw new BadRequestException("provider must be provider");
     }
 
-    const service = await this.serviceService.add({
+    const newService = {
       ...createServiceDto,
       provider: request.user.roles.includes(Role.PROVIDER)
         ? request.user.id
         : createServiceDto.provider,
-    });
+    };
+    if (!createServiceDto.mainImageId && file) {
+      const image = await this.fileUploadService.uploadImage(file);
+      newService.mainImageId = image.id;
+    }
+
+    const createdService = await this.serviceService.create(newService);
+
     return new AddServiceResponseDto({
-      data: service,
+      data: createdService,
       message: "Service Created Sucessfully",
       status: HttpStatus.CREATED,
     });
@@ -113,6 +134,36 @@ export class ServiceController {
     return new ResponseMetadataDto({
       status: HttpStatus.NO_CONTENT,
       message: "Service successfully deleted",
+    });
+  }
+
+  @Put(":service_id/images")
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FilesInterceptor("files"))
+  @UseRoles(Role.PROVIDER, Role.SUPPORT)
+  @ApiCreatedResponse({
+    type: AddServiceResponseDto,
+    description: "Service Created Sucessfully",
+  })
+  async uploadImages(
+    @UploadedFiles() files,
+    @Param("service_id") serviceId: string,
+  ) {
+    if (!Array.isArray(files)) {
+      throw new BadRequestException("Except an array of files");
+    }
+
+    const imageIds: string[] = [];
+    for (const file of files) {
+      const image = await this.fileUploadService.uploadImage(file);
+      imageIds.push(image.id);
+    }
+
+    const service = await this.serviceService.addImages(serviceId, imageIds);
+    return new AddServiceResponseDto({
+      data: new ServiceDto(service.toJSON()),
+      message: "Service Created Sucessfully",
+      status: HttpStatus.CREATED,
     });
   }
 }

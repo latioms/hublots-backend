@@ -49,6 +49,10 @@ export class CreateServiceDto {
   @IsOptional()
   provider: string;
 
+  @IsString()
+  @ApiPropertyOptional({})
+  mainImageId: string;
+
   constructor(createService: CreateServiceDto) {
     Object.assign(this, createService);
   }

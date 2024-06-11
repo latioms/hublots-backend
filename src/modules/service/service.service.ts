@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { NotFoundException } from "@nestjs/common";
+import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { BulkQueryDto } from "../dto/response.dto";
-import { Service } from "./schema/service.schema";
 import { CreateServiceDto, ServiceDto, UpdateServiceDto } from "./dto";
+import { Service } from "./schema/service.schema";
 
 @Injectable()
 export class ServiceService {
@@ -12,7 +12,7 @@ export class ServiceService {
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
   ) {}
 
-  async add(data: CreateServiceDto): Promise<ServiceDto> {
+  async create(data: CreateServiceDto): Promise<ServiceDto> {
     const createdService = await new this.serviceModel({
       ...data,
       updatedAt: new Date(),
@@ -50,5 +50,13 @@ export class ServiceService {
       )
       .exec();
     return new ServiceDto(service.toJSON());
+  }
+
+  async addImages(serviceId: string, imageIds: string[]): Promise<Service> {
+    const service = await this.serviceModel.findById(serviceId);
+    if (!service)
+      throw new NotFoundException(`Service with id ${serviceId} not found`);
+    service.images.push(...imageIds.map((id) => new ObjectId(id)));
+    return service.save();
   }
 }
