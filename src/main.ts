@@ -3,7 +3,7 @@ import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { ValidationPipe } from "@nestjs/common";
+import { ValidationPipe, Logger } from "@nestjs/common";
 import { AllExceptionsFilter } from "./all-exceptions.filter";
 
 async function bootstrap() {
@@ -40,6 +40,9 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(3000);
+  const PORT = 8080;
+  await app.listen(PORT, () => {
+    Logger.log(`Server is runnnig on port ${PORT}`);
+  });
 }
 bootstrap();
