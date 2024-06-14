@@ -20,7 +20,10 @@ export class Offer extends Document {
   estimated_duration: number;
 
   //reference to offers
-  @Prop({ type: [{ type: Types.ObjectId, ref: "OfferItem", required: true }] })
+  @Prop({
+    type: [{ type: Types.ObjectId, ref: "OfferItem", required: true }],
+    default: [],
+  })
   items: Types.ObjectId[];
 }
 
