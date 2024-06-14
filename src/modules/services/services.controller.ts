@@ -34,15 +34,15 @@ import {
   GetOneServiceResponseDto,
   ServiceDto,
 } from "./dto/service.dto";
-import { ServiceService } from "./service.service";
+import { ServicesService } from "./services.service";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import { FileUploadService } from "../files/file-upload.service";
 
 @ApiTags("Services")
 @Controller("services")
-export class ServiceController {
+export class ServicesController {
   constructor(
-    private serviceService: ServiceService,
+    private serviceService: ServicesService,
     private fileUploadService: FileUploadService,
   ) {}
 

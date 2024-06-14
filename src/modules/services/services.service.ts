@@ -7,7 +7,7 @@ import { CreateServiceDto, UpdateServiceDto } from "./dto";
 import { Service } from "./schema/service.schema";
 
 @Injectable()
-export class ServiceService {
+export class ServicesService {
   constructor(
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
   ) {}
