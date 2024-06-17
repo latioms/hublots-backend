@@ -133,14 +133,14 @@ export class ServicesController {
     });
   }
 
-  @Put(":service_id/images")
+  @Put(":id/images")
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(FilesInterceptor("files"))
   @UseRoles(Role.PROVIDER, Role.SUPPORT)
   @ApiCustomOkResponse(ServiceEntity)
   async uploadImages(
     @UploadedFiles() files,
-    @Param("service_id") serviceId: string,
+    @Param("id") serviceId: string,
   ): Promise<ResponseDataDto<ServiceEntity>> {
     if (!Array.isArray(files)) {
       throw new BadRequestException("Except an array of files");

@@ -1,4 +1,9 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from "@nestjs/swagger";
 import { IsArray, IsNumber, IsString, ValidateNested } from "class-validator";
 import { CreateOfferItemDto, OfferItemDto } from "./ofer-item.dto";
 import { Type } from "class-transformer";
@@ -27,7 +32,9 @@ export class CreateOfferDto {
   }
 }
 
-export class UpdateOfferDto extends PartialType(CreateOfferDto) {}
+export class UpdateOfferDto extends PartialType(
+  OmitType(CreateOfferDto, ["items"]),
+) {}
 
 export class OfferEntity extends CreateOfferDto {
   @IsString()
