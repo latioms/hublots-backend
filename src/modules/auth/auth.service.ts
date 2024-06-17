@@ -62,7 +62,7 @@ export class AuthService {
 
     if (accessToken) {
       const payload = await this.jwtService.verifyAsync(accessToken, {
-        secret: process.env.JWT_KEY,
+        secret: process.env.JWT_SECRET,
       });
       await this.usersService.createSignOutLog(payload.logId);
     }
@@ -75,7 +75,7 @@ export class AuthService {
     }
 
     const payload = await this.jwtService.verifyAsync(token, {
-      secret: process.env.JWT_KEY,
+      secret: process.env.JWT_SECRET,
     });
     let authorizedUser: User;
     const log = await this.usersService.findUserLog(payload.logId);

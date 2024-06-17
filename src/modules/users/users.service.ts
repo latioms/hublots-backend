@@ -24,7 +24,7 @@ export class UsersService {
       ...userData,
       password: bcrypt.hashSync(
         userData.password,
-        parseInt(process.env.SALT_ROUND_DCRIPT),
+        parseInt(process.env.BCRYPT_SALT),
       ),
     });
     return newUser.save();
