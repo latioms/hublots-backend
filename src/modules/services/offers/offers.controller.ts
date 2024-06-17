@@ -1,20 +1,31 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpStatus,
   Param,
+  ParseArrayPipe,
   Post,
   Put,
   Req,
 } from "@nestjs/common";
-import { OffersService } from "./offers.service";
 import { ApiTags } from "@nestjs/swagger";
-import { CreateOfferDto, OfferEntity, UpdateOfferDto } from "./dto/offer.dto";
+import { Request } from "express";
+import {
+  ApiCustomCreatedResponse,
+  ApiCustomOkResponse,
+} from "src/helpers/api-decorator";
 import { ResponseDataDto } from "src/helpers/api-dto";
-import { ApiCustomCreatedResponse } from "src/helpers/api-decorator";
 import { UseRoles } from "src/modules/auth/decorator/auth.decorator";
 import { Role } from "src/modules/users/dto";
-import { Request } from "express";
+import { CreateOfferItemDto } from "./dto/ofer-item.dto";
+import {
+  CreateOfferDto,
+  OfferDetailsDto,
+  OfferEntity,
+  UpdateOfferDto,
+} from "./dto/offer.dto";
+import { OffersService } from "./offers.service";
 
 @ApiTags("Service Offers")
 @Controller("services/offers")
@@ -38,10 +49,11 @@ export class OffersController {
 
   @Post("bulk-insert")
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
-  @ApiCustomCreatedResponse(OfferEntity)
+  @ApiCustomCreatedResponse(OfferEntity, true)
   async createManyOffers(
     @Req() request: Request,
-    @Body() payload: CreateOfferDto[],
+    @Body(new ParseArrayPipe({ items: CreateOfferDto }))
+    payload: CreateOfferDto[],
   ): Promise<ResponseDataDto<OfferEntity[]>> {
     const newOffers = await this.offersService.bulkCreate(
       payload,
@@ -56,6 +68,7 @@ export class OffersController {
 
   @Put(":id")
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
+  @ApiCustomOkResponse(OfferEntity)
   async updateOffer(
     @Param("id") offerId,
     @Body() payload: UpdateOfferDto,
@@ -64,6 +77,41 @@ export class OffersController {
     return new ResponseDataDto({
       data: new OfferEntity(updatedOffer.toJSON()),
       message: "All offers created successfully",
+      status: HttpStatus.CREATED,
+    });
+  }
+
+  @Put(":id/items")
+  @UseRoles(Role.SUPPORT, Role.PROVIDER)
+  @ApiCustomOkResponse(OfferDetailsDto)
+  async addedOfferItems(
+    @Param("id") offerId: string,
+    @Body(new ParseArrayPipe({ items: CreateOfferItemDto }))
+    payload: CreateOfferItemDto[],
+  ): Promise<ResponseDataDto<OfferDetailsDto>> {
+    const updatedOffer = await this.offersService.addItems(offerId, payload);
+    return new ResponseDataDto({
+      data: new OfferDetailsDto(updatedOffer.toJSON()),
+      message: "Offer items created successfully",
+      status: HttpStatus.CREATED,
+    });
+  }
+
+  @Delete(":id/items")
+  @UseRoles(Role.SUPPORT, Role.PROVIDER)
+  @ApiCustomOkResponse(OfferDetailsDto)
+  async removeOfferItems(
+    @Param("id") offerId: string,
+    @Body(new ParseArrayPipe({ items: String }))
+    itemIds: string[],
+  ): Promise<ResponseDataDto<OfferDetailsDto>> {
+    const updatedOffer = await this.offersService.removedItems(
+      offerId,
+      itemIds,
+    );
+    return new ResponseDataDto({
+      data: new OfferDetailsDto(updatedOffer.toJSON()),
+      message: "Offers items deleted successfully",
       status: HttpStatus.CREATED,
     });
   }

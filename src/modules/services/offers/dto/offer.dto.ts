@@ -36,17 +36,24 @@ export class CreateOfferDto {
   }
 }
 
-export class UpdateOfferDto extends PartialType(
-  OmitType(CreateOfferDto, ["items"]),
-) {}
+export class OfferWithoutItemsDto extends OmitType(CreateOfferDto, ["items"]) {}
+export class UpdateOfferDto extends PartialType(OfferWithoutItemsDto) {}
 
-export class OfferEntity extends CreateOfferDto {
+export class OfferEntity extends OfferWithoutItemsDto {
   @IsString()
   @ApiProperty()
   id: string;
+
+  @ApiProperty({ type: [OfferItemDto] })
+  @IsString({ each: true })
+  items: string[];
 }
 
-export class OfferDetailsDto extends OfferEntity {
+export class OfferDetailsDto extends OfferWithoutItemsDto {
+  @IsString()
+  @ApiProperty()
+  id: string;
+
   @ApiProperty({ type: [OfferItemDto] })
   @Type(() => OfferItemDto)
   @ValidateNested({ each: true })

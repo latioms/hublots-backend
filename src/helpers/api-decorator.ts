@@ -32,6 +32,7 @@ export const ApiOkPaginatedResponse = <TModel extends Type<any>>(
 
 export const ApiCustomCreatedResponse = <TModel extends Type<any>>(
   model: TModel,
+  isArray = false,
 ) => {
   return applyDecorators(
     ApiExtraModels(ResponseDataDto, model),
@@ -41,7 +42,12 @@ export const ApiCustomCreatedResponse = <TModel extends Type<any>>(
           { $ref: getSchemaPath(ResponseDataDto) },
           {
             properties: {
-              data: { $ref: getSchemaPath(model) },
+              data: isArray
+                ? {
+                    type: "array",
+                    items: { $ref: getSchemaPath(model) },
+                  }
+                : { $ref: getSchemaPath(model) },
             },
           },
         ],
