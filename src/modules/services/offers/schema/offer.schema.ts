@@ -1,14 +1,19 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { User } from "src/modules/users/schema/user.schema";
-import { v4 as uuidv4 } from "uuid";
 import { OfferItem } from "./offer-item.schema";
 
-@Schema()
+@Schema({
+  toJSON: {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, offer) {
+      offer.id = offer._id;
+      delete offer._id;
+    },
+  },
+})
 export class Offer extends Document {
-  @Prop({ required: true, default: uuidv4, unique: true })
-  id: string;
-
   @Prop({ type: String, required: true })
   name: string;
 
@@ -20,6 +25,13 @@ export class Offer extends Document {
     required: true,
   })
   estimatedDuration: number;
+
+  @Prop({
+    type: Date,
+    required: true,
+    default: Date.now,
+  })
+  createdAt: Date;
 
   // reference to service
   @Prop({ required: true, type: Types.ObjectId, ref: "Service" })
@@ -39,19 +51,6 @@ export class Offer extends Document {
   // reference to creator
   @Prop({ required: true, type: Types.ObjectId, ref: User.name })
   createdBy: string;
-
-  toJSON() {
-    const user = this.toObject();
-    user.id = user._id;
-    delete user._id;
-    delete user.__v;
-    return user;
-  }
-
-  constructor(content: Offer) {
-    super();
-    Object.assign(this, content);
-  }
 }
 
 export const OfferSchema = SchemaFactory.createForClass(Offer);

@@ -1,13 +1,19 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
-import { Locale, Role, UserEntity, VerificationStatus } from "../dto/users.dto";
+import { Locale, Role, VerificationStatus } from "../dto/users.dto";
 
-@Schema()
+@Schema({
+  toJSON: {
+    virtuals: true,
+    versionKey: false,
+    transform: function (doc, user) {
+      user.id = user._id;
+      delete user._id;
+      delete user.password;
+    },
+  },
+})
 export class User extends Document {
-  @Prop({ required: true, default: uuidv4, unique: true })
-  id: string;
-
   @Prop({ type: String, required: true })
   fullname: string;
 
@@ -100,19 +106,6 @@ export class User extends Document {
   //reference to logs
   @Prop({ type: [{ type: Types.ObjectId, ref: "Log", required: true }] })
   logs: Types.ObjectId[];
-
-  toJSON() {
-    const user = this.toObject();
-    user.id = user._id;
-    delete user._id;
-    delete user.__v;
-    return user;
-  }
-
-  constructor(entity: UserEntity) {
-    super();
-    Object.assign(this, entity);
-  }
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
