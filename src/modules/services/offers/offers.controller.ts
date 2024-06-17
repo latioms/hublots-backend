@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   Param,
   ParseArrayPipe,
@@ -31,6 +32,19 @@ import { OffersService } from "./offers.service";
 @Controller("services/offers")
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
+
+  @Get(":id")
+  @ApiCustomOkResponse(OfferDetailsDto)
+  async finOne(
+    @Param("id") offerId: string,
+  ): Promise<ResponseDataDto<OfferDetailsDto>> {
+    const offer = await this.offersService.findOne(offerId);
+    return new ResponseDataDto({
+      data: new OfferDetailsDto(offer.toJSON()),
+      message: "Offer retrieve successfully",
+      status: HttpStatus.OK,
+    });
+  }
 
   @Post("new")
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
@@ -82,7 +96,7 @@ export class OffersController {
     );
     return new ResponseDataDto({
       data: new OfferEntity(updatedOffer.toJSON()),
-      message: "All offers created successfully",
+      message: "Offer updated successfully",
       status: HttpStatus.CREATED,
     });
   }
@@ -98,7 +112,7 @@ export class OffersController {
   ): Promise<ResponseMetadataDto> {
     await this.offersService.delete(offerId, request.user._id as string);
     return new ResponseMetadataDto({
-      message: "All offers created successfully",
+      message: "Offer deleted successfully",
       status: HttpStatus.CREATED,
     });
   }
