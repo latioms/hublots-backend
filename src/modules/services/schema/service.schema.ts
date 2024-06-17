@@ -2,6 +2,9 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { ServiceEntity } from "../dto";
+import { Image } from "src/modules/files/schemas/image.schema";
+import { Offer } from "../offers/schema/offer.schema";
+import { User } from "src/modules/users/schema/user.schema";
 
 export enum Category {
   SCHOOL_SUPPORT = "Soutien scolaire",
@@ -44,23 +47,23 @@ export class Service extends Document {
   category: Category;
 
   // reference to main image
-  @Prop({ type: Types.ObjectId, ref: "Image", required: true })
+  @Prop({ type: Types.ObjectId, ref: Image.name, required: true })
   mainImageId: Types.ObjectId;
 
   //reference to offers
-  @Prop({ type: [{ type: Types.ObjectId, ref: "Offer", required: true }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: Offer.name, required: true }] })
   offers: Types.ObjectId[];
 
   //reference to images
-  @Prop({ type: [{ type: Types.ObjectId, ref: "Image", required: true }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: Image.name, required: true }] })
   images: Types.ObjectId[];
 
   //reference to the provider
-  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  @Prop({ type: Types.ObjectId, ref: User.name, required: true })
   provider: Types.ObjectId;
 
   // reference to creator
-  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  @Prop({ type: Types.ObjectId, ref: User.name, required: true })
   createdBy: string;
 
   toJSON() {
