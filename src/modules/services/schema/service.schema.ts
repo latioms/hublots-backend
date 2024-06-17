@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { ServiceDto } from "../dto/service.dto";
+import { ServiceEntity } from "../dto";
 
 export enum Category {
   SCHOOL_SUPPORT = "Soutien scolaire",
@@ -67,9 +67,9 @@ export class Service extends Document {
     return service;
   }
 
-  constructor(createService: ServiceDto) {
+  constructor(entity: ServiceEntity) {
     super();
-    Object.assign(this, createService);
+    Object.assign(this, entity);
   }
 }
 

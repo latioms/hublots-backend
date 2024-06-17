@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import { Locale, Role, UserDto, VerificationStatus } from "../dto/users.dto";
+import { Locale, Role, UserEntity, VerificationStatus } from "../dto/users.dto";
 
 @Schema()
 export class User extends Document {
@@ -109,9 +109,9 @@ export class User extends Document {
     return user;
   }
 
-  constructor(userDto: UserDto) {
+  constructor(entity: UserEntity) {
     super();
-    Object.assign(this, userDto);
+    Object.assign(this, entity);
   }
 }
 

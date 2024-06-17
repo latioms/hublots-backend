@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
-import { BulkQueryDto } from "../dto/response.dto";
+import { BulkQueryDto } from "../../helpers/api-dto";
 import { CreateServiceDto, UpdateServiceDto } from "./dto";
 import { Service } from "./schema/service.schema";
 

@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Document, Model } from "mongoose";
-import { BulkQueryDto } from "src/modules/dto";
 import { Offer } from "./schema/offer.schema";
 import { CreateOfferDto, UpdateOfferDto } from "./dto/offer.dto";
+import { BulkQueryDto } from "src/helpers/api-dto";
 
 @Injectable()
 export class OffersService<T extends Document = Offer> {

@@ -4,17 +4,13 @@ import {
   OmitType,
   PartialType,
 } from "@nestjs/swagger";
-import { Type } from "class-transformer";
 import {
-  IsArray,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   MinLength,
-  ValidateNested,
 } from "class-validator";
-import { BulkResponseMetadataDto, ResponseMetadataDto } from "src/modules/dto";
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -58,16 +54,7 @@ export class CreateServiceDto {
   }
 }
 
-export class GetServiceByIdDto {
-  @ApiProperty({
-    example: "Service ID",
-    description: "The service ID is required to obtain a service.",
-  })
-  @IsUUID()
-  id: string;
-}
-
-export class ServiceDto extends CreateServiceDto {
+export class ServiceEntity extends CreateServiceDto {
   @ApiProperty({
     description: "Timestamp of last update",
   })
@@ -91,64 +78,12 @@ export class ServiceDto extends CreateServiceDto {
   @IsString()
   availability: string;
 
-  constructor(service: ServiceDto) {
+  constructor(service: ServiceEntity) {
     super(service);
     Object.assign(this, service);
   }
 }
 
 export class UpdateServiceDto extends PartialType(
-  OmitType(ServiceDto, ["name", "description", "price"] as const),
+  OmitType(ServiceEntity, ["name", "description", "price"] as const),
 ) {}
-// -------------------- Responses ----------------------------------
-export class AddServiceResponseDto extends ResponseMetadataDto {
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => ServiceDto)
-  data: ServiceDto;
-
-  constructor(responseBody: AddServiceResponseDto) {
-    super(responseBody);
-    Object.assign(this, responseBody);
-  }
-}
-
-export class RegisterServiceResponseDto extends ResponseMetadataDto {
-  @ApiProperty({
-    example: "Service created successfully",
-    description: "Message to display",
-  })
-  @ValidateNested()
-  @Type(() => ServiceDto)
-  data: ServiceDto;
-
-  constructor(responseBody: RegisterServiceResponseDto) {
-    super(responseBody);
-    Object.assign(this, responseBody);
-  }
-}
-
-export class GetAllServiceResponseDto extends BulkResponseMetadataDto {
-  @IsArray()
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => ServiceDto)
-  data: ServiceDto[];
-
-  constructor(response: GetAllServiceResponseDto) {
-    super(response);
-    Object.assign(this, response);
-  }
-}
-
-export class GetOneServiceResponseDto extends ResponseMetadataDto {
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => ServiceDto)
-  data: ServiceDto;
-
-  constructor(response: GetOneServiceResponseDto) {
-    super(response);
-    Object.assign(this, response);
-  }
-}

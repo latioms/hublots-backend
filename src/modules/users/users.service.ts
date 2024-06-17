@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import * as bcrypt from "bcrypt";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
-import { BulkQueryDto } from "../dto/response.dto";
+import { BulkQueryDto } from "../../helpers/api-dto";
 import {
   CreateAccountDto,
   CreateUserDto,

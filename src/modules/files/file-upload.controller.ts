@@ -18,7 +18,7 @@ import {
   ApiProduces,
   ApiTags,
 } from "@nestjs/swagger";
-import { ResponseMetadataDto } from "../dto";
+import { ResponseMetadataDto } from "src/helpers/api-dto";
 
 @ApiTags("Files")
 @Controller("files")
