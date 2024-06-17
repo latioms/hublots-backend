@@ -37,7 +37,11 @@ import {
 import { Public, UseRoles } from "../auth/decorator/auth.decorator";
 import { FileUploadService } from "../files/file-upload.service";
 import { Role } from "../users/dto";
-import { CreateServiceDto, ServiceEntity } from "./dto/service.dto";
+import {
+  CreateServiceDto,
+  ServiceDetailsDto,
+  ServiceEntity,
+} from "./dto/service.dto";
 import { ServicesService } from "./services.service";
 
 @ApiTags("Services")
@@ -105,15 +109,15 @@ export class ServicesController {
   }
 
   @Get(":id")
-  @ApiCustomOkResponse(ServiceEntity)
+  @ApiCustomOkResponse(ServiceDetailsDto)
   @ApiNotFoundResponse({ description: "Service not found" })
   @ApiBadGatewayResponse({ description: "Invalid service ID" })
   async findOne(
     @Param("id") serviceId: string,
-  ): Promise<ResponseDataDto<ServiceEntity>> {
+  ): Promise<ResponseDataDto<ServiceDetailsDto>> {
     const service = await this.serviceService.findOne(serviceId); // Call the findOne method with the serviceId parameter
     return new ResponseDataDto({
-      data: new ServiceEntity(service.toJSON()),
+      data: new ServiceDetailsDto(service.toJSON()),
       message: "Successfully retrieved service",
       status: HttpStatus.OK,
     });

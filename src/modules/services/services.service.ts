@@ -22,7 +22,11 @@ export class ServicesService {
   }
 
   async findOne(serviceId: string): Promise<Service> {
-    return this.serviceModel.findById(serviceId).exec();
+    return this.serviceModel
+      .findById(serviceId)
+      .populate("offers")
+      .populate("provider")
+      .exec();
   }
 
   async findAll(query: BulkQueryDto): Promise<Service[]> {

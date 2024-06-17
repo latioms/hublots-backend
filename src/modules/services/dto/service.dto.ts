@@ -3,6 +3,7 @@ import {
   ApiPropertyOptional,
   OmitType,
   PartialType,
+  PickType,
 } from "@nestjs/swagger";
 import {
   IsNumber,
@@ -11,6 +12,8 @@ import {
   IsUUID,
   MinLength,
 } from "class-validator";
+import { OfferEntity } from "../offers/dto/offer.dto";
+import { UserEntity } from "src/modules/users/dto";
 
 export class CreateServiceDto {
   @ApiProperty({
@@ -85,5 +88,13 @@ export class ServiceEntity extends CreateServiceDto {
 }
 
 export class UpdateServiceDto extends PartialType(
-  OmitType(ServiceEntity, ["name", "description", "price"] as const),
+  PickType(ServiceEntity, ["name", "description", "price"] as const),
 ) {}
+
+export class ServiceDetailsDto extends OmitType(ServiceEntity, ["provider"]) {
+  @ApiProperty({ type: [OfferEntity] })
+  offers: OfferEntity[];
+
+  @ApiProperty({ type: UserEntity })
+  provider: UserEntity;
+}
