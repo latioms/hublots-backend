@@ -92,7 +92,10 @@ export class ServicesController {
       newService.mainImageId = image.id;
     }
 
-    const service = await this.serviceService.create(newService);
+    const service = await this.serviceService.create(
+      newService,
+      request.user.id,
+    );
 
     return new ResponseDataDto({
       data: new ServiceEntity(service.toJSON()),

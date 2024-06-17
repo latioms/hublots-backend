@@ -59,6 +59,10 @@ export class Service extends Document {
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
   provider: Types.ObjectId;
 
+  // reference to creator
+  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  createdBy: string;
+
   toJSON() {
     const service = this.toObject();
     service.id = service._id;

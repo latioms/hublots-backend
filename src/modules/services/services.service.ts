@@ -12,9 +12,10 @@ export class ServicesService {
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
   ) {}
 
-  async create(data: CreateServiceDto): Promise<Service> {
+  async create(data: CreateServiceDto, createdBy: string): Promise<Service> {
     return new this.serviceModel({
       ...data,
+      createdBy,
       updatedAt: new Date(),
       createdAt: new Date(),
     }).save();
