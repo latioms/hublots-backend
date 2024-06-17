@@ -21,7 +21,7 @@ export class Offer extends Document {
   })
   estimatedDuration: number;
 
-  // reference to creator
+  // reference to service
   @Prop({ required: true, type: Types.ObjectId, ref: "Service" })
   serviceId: string;
 
@@ -31,6 +31,10 @@ export class Offer extends Document {
     default: [],
   })
   items: Types.ObjectId[];
+
+  // reference to provider
+  @Prop({ required: true, type: Types.ObjectId, ref: User.name })
+  provider: string;
 
   // reference to creator
   @Prop({ required: true, type: Types.ObjectId, ref: User.name })
