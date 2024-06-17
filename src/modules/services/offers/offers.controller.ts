@@ -9,7 +9,7 @@ import {
   Put,
   Req,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import {
   ApiCustomCreatedResponse,
@@ -50,6 +50,7 @@ export class OffersController {
   @Post("bulk-insert")
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
   @ApiCustomCreatedResponse(OfferEntity, true)
+  @ApiBody({ type: [CreateOfferDto] })
   async createManyOffers(
     @Req() request: Request,
     @Body(new ParseArrayPipe({ items: CreateOfferDto }))
