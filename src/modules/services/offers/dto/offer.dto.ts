@@ -23,13 +23,13 @@ export class CreateOfferDto {
 
 export class UpdateOfferDto extends PartialType(CreateOfferDto) {}
 
-export class OfferDto extends CreateOfferDto {
+export class OfferEntity extends CreateOfferDto {
   @IsString()
   @ApiProperty()
   id: string;
 }
 
-export class OfferDetailsDto extends OfferDto {
+export class OfferDetailsDto extends OfferEntity {
   @ApiProperty({ type: [OfferItemDto] })
   @Type(() => OfferItemDto)
   @ValidateNested({ each: true })

@@ -1,27 +1,30 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Document, Model } from "mongoose";
-import { Offer } from "./schema/offer.schema";
-import { CreateOfferDto, UpdateOfferDto } from "./dto/offer.dto";
+import { Model } from "mongoose";
 import { BulkQueryDto } from "src/helpers/api-dto";
+import { CreateOfferDto, UpdateOfferDto } from "./dto/offer.dto";
+import { Offer } from "./schema/offer.schema";
 
 @Injectable()
-export class OffersService<T extends Document = Offer> {
-  constructor(@InjectModel(Offer.name) private readonly offerModel: Model<T>) {}
+export class OffersService {
+  constructor(
+    @InjectModel(Offer.name) private readonly offerModel: Model<Offer>,
+  ) {}
 
-  async create(data: CreateOfferDto): Promise<T> {
+  async create(data: CreateOfferDto, createdBy: string): Promise<Offer> {
     return new this.offerModel({
       ...data,
+      createdBy,
       updatedAt: new Date(),
       createdAt: new Date(),
     }).save();
   }
 
-  async findOne(serviceId: string): Promise<T> {
+  async findOne(serviceId: string): Promise<Offer> {
     return this.offerModel.findById(serviceId).exec();
   }
 
-  async findAll(query: BulkQueryDto): Promise<T[]> {
+  async findAll(query: BulkQueryDto): Promise<Offer[]> {
     return this.offerModel
       .find()
       .limit(query.perpage ?? 10)
@@ -35,7 +38,7 @@ export class OffersService<T extends Document = Offer> {
       throw new NotFoundException(`Offer with id ${offerId} not found`);
   }
 
-  async update(offerId: string, data: UpdateOfferDto): Promise<T> {
+  async update(offerId: string, data: UpdateOfferDto): Promise<Offer> {
     return this.offerModel
       .findByIdAndUpdate(
         offerId,

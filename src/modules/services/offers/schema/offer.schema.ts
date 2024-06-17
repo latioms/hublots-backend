@@ -19,6 +19,10 @@ export class Offer extends Document {
   })
   estimated_duration: number;
 
+  // reference to creator
+  @Prop({ required: true, type: Types.ObjectId, ref: "User" })
+  createdBy: string;
+
   //reference to offers
   @Prop({
     type: [{ type: Types.ObjectId, ref: "OfferItem", required: true }],
