@@ -67,8 +67,9 @@ export class CreateUserDto {
     description:
       "The locale is the default language of the user. Required to create a new account",
   })
+  @IsOptional()
   @IsEnum(Locale)
-  locale: Locale;
+  locale: Locale = Locale.FR;
 
   @ApiProperty({
     example: "Lobbessou",

@@ -27,6 +27,10 @@ export class AuthService {
     } else if (!user.isActive) {
       throw new ForbiddenException("User account was disactivated !!!");
     }
+    return await this.login(user);
+  }
+
+  private async login(user: User) {
     const log = await this.usersService.createSignInLog(user._id as string);
     const payload = { username: user.email, logId: log._id };
     return this.jwtService.sign(payload, {
@@ -36,10 +40,7 @@ export class AuthService {
 
   async singUp(createUserDto: CreateUserDto) {
     const user = await this.usersService.register(createUserDto);
-    const payload = { username: user.email };
-    const accessToken = this.jwtService.sign(payload, {
-      secret: jwtConstants.secret,
-    });
+    const accessToken = await this.login(user);
     return { accessToken, user };
   }
 
@@ -76,7 +77,6 @@ export class AuthService {
     const payload = await this.jwtService.verifyAsync(token, {
       secret: process.env.JWT_KEY,
     });
-
     let authorizedUser: User;
     const log = await this.usersService.findUserLog(payload.logId);
     if (!log.logoutAt) {
