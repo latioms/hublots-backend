@@ -1,6 +1,6 @@
-import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsNumber, IsString, ValidateNested } from "class-validator";
-import { OfferItemDto } from "./ofer-item.dto";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { IsArray, IsNumber, IsString, ValidateNested } from "class-validator";
+import { CreateOfferItemDto, OfferItemDto } from "./ofer-item.dto";
 import { Type } from "class-transformer";
 
 export class CreateOfferDto {
@@ -15,6 +15,12 @@ export class CreateOfferDto {
   @IsNumber()
   @ApiProperty()
   estimated_duration: number;
+
+  @IsArray()
+  @Type(() => CreateOfferItemDto)
+  @ValidateNested({ each: true })
+  @ApiPropertyOptional({ type: [CreateOfferItemDto] })
+  items: CreateOfferItemDto[] = [];
 
   constructor(createOffer: CreateOfferDto) {
     Object.assign(this, createOffer);

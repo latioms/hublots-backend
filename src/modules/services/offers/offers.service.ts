@@ -4,17 +4,32 @@ import { Model } from "mongoose";
 import { BulkQueryDto } from "src/helpers/api-dto";
 import { CreateOfferDto, UpdateOfferDto } from "./dto/offer.dto";
 import { Offer } from "./schema/offer.schema";
+import { OfferItem } from "./schema/offer-item.schema";
 
 @Injectable()
 export class OffersService {
   constructor(
     @InjectModel(Offer.name) private readonly offerModel: Model<Offer>,
+    @InjectModel(OfferItem.name)
+    private readonly offerItemModel: Model<OfferItem>,
   ) {}
 
-  async create(data: CreateOfferDto, createdBy: string): Promise<Offer> {
+  async create(
+    { items, ...data }: CreateOfferDto,
+    createdBy: string,
+  ): Promise<Offer> {
+    let createdItemIds: string[] = [];
+    if (items.length > 0) {
+      const createdItems = await this.offerItemModel.insertMany(
+        items.map((item) => ({ ...item, createdBy })),
+      );
+      createdItemIds = createdItems.map((_) => _._id as string);
+    }
+
     return new this.offerModel({
       ...data,
       createdBy,
+      items: createdItemIds,
       updatedAt: new Date(),
       createdAt: new Date(),
     }).save();
@@ -24,16 +39,38 @@ export class OffersService {
     bulkData: CreateOfferDto[],
     createdBy: string,
   ): Promise<Offer[]> {
-    return this.offerModel.insertMany(
-      bulkData.map((data) =>
-        new this.offerModel({
-          ...data,
-          createdBy,
-          updatedAt: new Date(),
-          createdAt: new Date(),
-        }).save(),
-      ),
-    );
+    const session = await this.offerModel.startSession();
+    session.startTransaction();
+    try {
+      let newOffers: Offer[] = [];
+      for (const { items, ...data } of bulkData) {
+        let createdItemIds: string[] = [];
+        if (items.length > 0) {
+          const createdItems = await this.offerItemModel.insertMany(
+            items.map((item) => ({ ...item, createdBy })),
+            { session },
+          );
+          createdItemIds = createdItems.map((_) => _._id as string);
+          newOffers.push(
+            new this.offerModel({
+              ...data,
+              createdBy,
+              items: createdItemIds,
+              updatedAt: new Date(),
+              createdAt: new Date(),
+            }),
+          );
+        }
+      }
+      newOffers = await this.offerModel.insertMany(newOffers, { session });
+      await session.commitTransaction();
+      return newOffers;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   async findOne(serviceId: string): Promise<Offer> {
