@@ -1,43 +1,43 @@
 import {
   Body,
   Controller,
-  Get,
-  HttpException,
+  Delete,
   HttpStatus,
   Post,
   Req,
-  UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiTags } from "@nestjs/swagger";
-import { ResponseMetadataDto, ResponseStatus } from "../dto";
 import {
-  GetOneUserResponseDto,
-  RegisterUserResponseDto,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiTags,
+} from "@nestjs/swagger";
+import { Request } from "express";
+import { ResponseMetadataDto } from "../dto";
+import {
+  CreateUserDto,
   GoogleSignInDto,
+  RegisterUserResponseDto,
   UserDto,
 } from "../users/dto/users.dto";
-import { UserService } from "../users/users.service";
-import { AuthenticatorGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
-import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
-import { SocialAuthService } from "./google/google-auth.service";
 import { Public } from "./decorator/auth.decorator";
+import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
+import { GoogleAuthService } from "./google/google-auth.service";
 
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private userService: UserService,
-    private authGuard: SocialAuthService,
+    private authGuard: GoogleAuthService,
   ) {}
 
+  @Public()
+  @Post("login")
   @ApiCreatedResponse({
     type: SignInResponseDto,
     description: "User Successfully signed in",
   })
-  @Public()
-  @Post("login")
   async signIn(@Body() signInDto: SignInDto): Promise<SignInResponseDto> {
     const accessToken = await this.authService.signIn(
       signInDto.email,
@@ -46,15 +46,16 @@ export class AuthController {
     return new SignInResponseDto({
       accessToken,
       message: "User Successfully signed in",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
+  @Public()
+  @Post("google-login")
   @ApiCreatedResponse({
     type: SignInResponseDto,
     description: "Successful user registration",
   })
-  @Post("google-login")
   async googleSignIn(
     @Body() signInDto: GoogleSignInDto,
   ): Promise<SignInResponseDto> {
@@ -62,24 +63,7 @@ export class AuthController {
     return new SignInResponseDto({
       accessToken,
       message: "Successfully signed user in",
-      status: ResponseStatus.SUCCESS,
-    });
-  }
-
-  @Get("profile")
-  @UseGuards(AuthenticatorGuard)
-  @ApiCreatedResponse({
-    type: GetOneUserResponseDto,
-    description: "Successful user registration",
-  })
-  async getProfile(@Req() req): Promise<GetOneUserResponseDto> {
-    const authUser = await this.userService.update(req.user._id, {
-      isOnline: true,
-    });
-    return new GetOneUserResponseDto({
-      data: authUser,
-      message: "Successfully retrieved user profile",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -90,23 +74,27 @@ export class AuthController {
     description: "Successful user registration",
   })
   async register(
-    @Body() createUserDto: UserDto,
+    @Body() createUserDto: CreateUserDto,
   ): Promise<RegisterUserResponseDto> {
-    try {
-      const user = await this.userService.register(createUserDto);
-      return new RegisterUserResponseDto({
-        data: user,
-        status: ResponseStatus.SUCCESS,
-        message: "Successfully register user",
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const { accessToken, user } = await this.authService.singUp(createUserDto);
+    return new RegisterUserResponseDto({
+      accessToken,
+      data: new UserDto(user.toJSON()),
+      status: HttpStatus.CREATED,
+      message: "Successfully register user",
+    });
+  }
+
+  @Delete("/sign-out")
+  @ApiNoContentResponse({
+    type: ResponseMetadataDto,
+    description: "Logout successfully",
+  })
+  async signOut(@Req() req: Request) {
+    await this.authService.signOut(req);
+    return new ResponseMetadataDto({
+      message: "Successfully deleted user",
+      status: HttpStatus.NO_CONTENT,
+    });
   }
 }

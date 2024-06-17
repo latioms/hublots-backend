@@ -1,28 +1,23 @@
 import { Module } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
-import { JwtService } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthenticatorGuard } from "../auth/auth.guard";
-import { User, UserSchema } from "./schema/users.schema";
+import { User, UserSchema } from "./schema/user.schema";
 import { UsersController } from "./users.controller";
-import { UserService } from "./users.service";
+import { UsersService } from "./users.service";
 
+import { AuthService } from "../auth/auth.service";
 import { FileUploadModule } from "../files/file-upload.module";
+import { Log, LogSchema } from "./schema/log.schema";
 
 @Module({
   imports: [
     FileUploadModule.forRoot(process.env.DATABASE_HOST, "kycImages"),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Log.name, schema: LogSchema },
+    ]),
   ],
   controllers: [UsersController],
-  providers: [
-    UserService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthenticatorGuard,
-    },
-    JwtService,
-  ],
-  exports: [UserService],
+  providers: [UsersService, AuthService],
+  exports: [UsersService],
 })
 export class UsersModule {}

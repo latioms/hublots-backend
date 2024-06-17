@@ -4,13 +4,11 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
   HttpStatus,
   Param,
   Post,
   Query,
   Req,
-  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
@@ -21,9 +19,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { AuthenticatorGuard } from "../auth/auth.guard";
 import { Public, UseRoles } from "../auth/decorator/auth.decorator";
-import { BulkQueryDto, ResponseMetadataDto, ResponseStatus } from "../dto";
+import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { Role } from "../users/dto";
 import {
   AddServiceResponseDto,
@@ -35,7 +32,6 @@ import { ServiceService } from "./service.service";
 
 @ApiTags("Services")
 @Controller("services")
-@UseGuards(AuthenticatorGuard)
 export class ServiceController {
   constructor(private serviceService: ServiceService) {}
 
@@ -53,7 +49,7 @@ export class ServiceController {
       data: services,
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
       message: "Successfully retrieved services",
     });
   }
@@ -75,27 +71,17 @@ export class ServiceController {
       throw new BadRequestException("provider must be provider");
     }
 
-    try {
-      const service = await this.serviceService.add({
-        ...createServiceDto,
-        provider: request.user.roles.includes(Role.PROVIDER)
-          ? request.user.id
-          : createServiceDto.provider,
-      });
-      return new AddServiceResponseDto({
-        data: service,
-        message: "Service Created Sucessfully",
-        status: ResponseStatus.SUCCESS,
-      });
-    } catch (error) {
-      throw new HttpException(
-        new ResponseMetadataDto({
-          message: error.message,
-          status: ResponseStatus.ERROR,
-        }),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    const service = await this.serviceService.add({
+      ...createServiceDto,
+      provider: request.user.roles.includes(Role.PROVIDER)
+        ? request.user.id
+        : createServiceDto.provider,
+    });
+    return new AddServiceResponseDto({
+      data: service,
+      message: "Service Created Sucessfully",
+      status: HttpStatus.CREATED,
+    });
   }
 
   @Get(":id")
@@ -112,7 +98,7 @@ export class ServiceController {
     return new GetOneServiceResponseDto({
       data: service,
       message: "Successfully retrieved service",
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.OK,
     });
   }
 
@@ -125,7 +111,7 @@ export class ServiceController {
   async delete(@Param("id") serviceId: string): Promise<ResponseMetadataDto> {
     await this.serviceService.delete(serviceId);
     return new ResponseMetadataDto({
-      status: ResponseStatus.SUCCESS,
+      status: HttpStatus.NO_CONTENT,
       message: "Service successfully deleted",
     });
   }
