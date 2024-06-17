@@ -16,8 +16,8 @@ import { UseRoles } from "src/modules/auth/decorator/auth.decorator";
 import { Role } from "src/modules/users/dto";
 import { Request } from "express";
 
-@ApiTags("Offers")
-@Controller("offers")
+@ApiTags("Service Offers")
+@Controller("services/offers")
 export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 

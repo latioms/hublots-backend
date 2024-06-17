@@ -19,7 +19,11 @@ export class CreateOfferDto {
 
   @IsNumber()
   @ApiProperty()
-  estimated_duration: number;
+  estimatedDuration: number;
+
+  @IsString()
+  @ApiProperty()
+  serviceId: string;
 
   @IsArray()
   @Type(() => CreateOfferItemDto)

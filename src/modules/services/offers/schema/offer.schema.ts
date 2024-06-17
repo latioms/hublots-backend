@@ -17,18 +17,35 @@ export class Offer extends Document {
     type: Number,
     required: true,
   })
-  estimated_duration: number;
+  estimatedDuration: number;
 
   // reference to creator
-  @Prop({ required: true, type: Types.ObjectId, ref: "User" })
-  createdBy: string;
+  @Prop({ required: true, type: Types.ObjectId, ref: "Service" })
+  serviceId: string;
 
-  //reference to offers
+  //reference to offer items
   @Prop({
     type: [{ type: Types.ObjectId, ref: "OfferItem", required: true }],
     default: [],
   })
   items: Types.ObjectId[];
+
+  // reference to creator
+  @Prop({ required: true, type: Types.ObjectId, ref: "User" })
+  createdBy: string;
+
+  toJSON() {
+    const user = this.toObject();
+    user.id = user._id;
+    delete user._id;
+    delete user.__v;
+    return user;
+  }
+
+  constructor(content: Offer) {
+    super();
+    Object.assign(this, content);
+  }
 }
 
 export const OfferSchema = SchemaFactory.createForClass(Offer);
