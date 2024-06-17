@@ -24,4 +24,22 @@ export class OffersController {
       status: HttpStatus.CREATED,
     });
   }
+
+  @Post("bulk-insert")
+  @UseRoles(Role.SUPPORT, Role.PROVIDER)
+  @ApiCustomCreatedResponse(OfferEntity)
+  async createManyOffers(
+    @Req() request: Request,
+    @Body() payload: CreateOfferDto[],
+  ) {
+    const newOffers = await this.offersService.bulkCreate(
+      payload,
+      request.user.id,
+    );
+    return new ResponseDataDto({
+      data: newOffers.map((newOffer) => new OfferEntity(newOffer.toJSON())),
+      message: "All offers created successfully",
+      status: HttpStatus.CREATED,
+    });
+  }
 }

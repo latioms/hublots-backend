@@ -20,6 +20,22 @@ export class OffersService {
     }).save();
   }
 
+  async bulkCreate(
+    bulkData: CreateOfferDto[],
+    createdBy: string,
+  ): Promise<Offer[]> {
+    return this.offerModel.insertMany(
+      bulkData.map((data) =>
+        new this.offerModel({
+          ...data,
+          createdBy,
+          updatedAt: new Date(),
+          createdAt: new Date(),
+        }).save(),
+      ),
+    );
+  }
+
   async findOne(serviceId: string): Promise<Offer> {
     return this.offerModel.findById(serviceId).exec();
   }
