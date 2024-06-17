@@ -129,8 +129,11 @@ export class ServicesController {
     type: ResponseMetadataDto,
     description: "Service successfully deleted",
   })
-  async delete(@Param("id") serviceId: string): Promise<ResponseMetadataDto> {
-    await this.serviceService.delete(serviceId);
+  async delete(
+    @Req() request: Request,
+    @Param("id") serviceId: string,
+  ): Promise<ResponseMetadataDto> {
+    await this.serviceService.delete(serviceId, request.user._id as string);
     return new ResponseMetadataDto({
       status: HttpStatus.NO_CONTENT,
       message: "Service successfully deleted",

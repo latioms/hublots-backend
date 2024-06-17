@@ -9,13 +9,13 @@ import {
   Put,
   Req,
 } from "@nestjs/common";
-import { ApiBody, ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiNoContentResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import {
   ApiCustomCreatedResponse,
   ApiCustomOkResponse,
 } from "src/helpers/api-decorator";
-import { ResponseDataDto } from "src/helpers/api-dto";
+import { ResponseDataDto, ResponseMetadataDto } from "src/helpers/api-dto";
 import { UseRoles } from "src/modules/auth/decorator/auth.decorator";
 import { Role } from "src/modules/users/dto";
 import { CreateOfferItemDto } from "./dto/ofer-item.dto";
@@ -58,7 +58,7 @@ export class OffersController {
   ): Promise<ResponseDataDto<OfferEntity[]>> {
     const newOffers = await this.offersService.bulkCreate(
       payload,
-      request.user.id,
+      request.user._id as string,
     );
     return new ResponseDataDto({
       data: newOffers.map((newOffer) => new OfferEntity(newOffer.toJSON())),
@@ -77,6 +77,22 @@ export class OffersController {
     const updatedOffer = await this.offersService.update(offerId, payload);
     return new ResponseDataDto({
       data: new OfferEntity(updatedOffer.toJSON()),
+      message: "All offers created successfully",
+      status: HttpStatus.CREATED,
+    });
+  }
+
+  @Delete(":id")
+  @UseRoles(Role.SUPPORT, Role.PROVIDER)
+  @ApiNoContentResponse({
+    type: ResponseMetadataDto,
+  })
+  async deleteOffer(
+    @Req() request: Request,
+    @Param("id") offerId: string,
+  ): Promise<ResponseMetadataDto> {
+    await this.offersService.delete(offerId, request.user._id as string);
+    return new ResponseMetadataDto({
       message: "All offers created successfully",
       status: HttpStatus.CREATED,
     });

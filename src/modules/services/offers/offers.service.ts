@@ -102,10 +102,15 @@ export class OffersService {
 
   async delete(offerId: string, deletedBy: string): Promise<void> {
     const service = await this.offerModel
-      .findOneAndDelete({ _id: offerId, createdBy: deletedBy })
+      .findOneAndDelete({
+        _id: offerId,
+        $or: [{ createdBy: deletedBy }, { provider: deletedBy }],
+      })
       .exec();
     if (!service)
-      throw new NotFoundException(`Offer with id ${offerId} not found`);
+      throw new NotFoundException(
+        `Offer with id ${offerId} not found or fobidden for active user`,
+      );
   }
 
   async update(offerId: string, data: UpdateOfferDto): Promise<Offer> {

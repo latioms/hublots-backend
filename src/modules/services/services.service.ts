@@ -37,10 +37,17 @@ export class ServicesService {
       .exec();
   }
 
-  async delete(serviceId: string): Promise<void> {
-    const service = await this.serviceModel.findByIdAndDelete(serviceId).exec();
+  async delete(serviceId: string, deletedBy: string): Promise<void> {
+    const service = await this.serviceModel
+      .findOne({
+        _id: serviceId,
+        $or: [{ createdBy: deletedBy, provider: deletedBy }],
+      })
+      .exec();
     if (!service)
-      throw new NotFoundException(`service with id ${serviceId} not found`);
+      throw new NotFoundException(
+        `Service with id ${serviceId} not found or fobidden for active user`,
+      );
   }
 
   async update(serviceId: string, data: UpdateServiceDto): Promise<Service> {
