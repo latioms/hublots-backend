@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { ClientSession, Model } from "mongoose";
@@ -101,33 +105,32 @@ export class OffersService {
   }
 
   async delete(offerId: string, deletedBy: string): Promise<void> {
-    const service = await this.offerModel
-      .findOneAndDelete({
-        _id: offerId,
-        $or: [{ createdBy: deletedBy }, { provider: deletedBy }],
-      })
-      .exec();
-    if (!service)
-      throw new NotFoundException(
-        `Offer with id ${offerId} not found or fobidden for active user`,
-      );
+    const offer = await this.offerModel.findById(offerId).exec();
+    this.checkPrivileges(offer, deletedBy);
+
+    await offer.deleteOne().exec();
   }
 
-  async update(offerId: string, data: UpdateOfferDto): Promise<Offer> {
-    return this.offerModel
-      .findByIdAndUpdate(
-        offerId,
-        { ...data, updatedAt: new Date() },
-        { new: true },
-      )
+  async update(
+    offerId: string,
+    data: UpdateOfferDto,
+    updatedBy: string,
+  ): Promise<Service> {
+    const offer = await this.offerModel.findById(offerId).exec();
+    this.checkPrivileges(offer, updatedBy);
+
+    return offer
+      .updateOne({ ...data, updatedAt: new Date() }, { new: true })
       .exec();
   }
 
-  async addItems(offerId: string, items: CreateOfferItemDto[]): Promise<Offer> {
+  async addItems(
+    offerId: string,
+    items: CreateOfferItemDto[],
+    addedBy: string,
+  ): Promise<Offer> {
     const offer = await this.offerModel.findById(offerId);
-    if (!offer) {
-      throw new NotFoundException(`Offer with id ${offerId} not found`);
-    }
+    this.checkPrivileges(offer, addedBy);
 
     return this.execWithinTransaction(async (session) => {
       const newItems = await this.offerItemModel.insertMany(
@@ -140,11 +143,13 @@ export class OffersService {
     });
   }
 
-  async removedItems(offerId: string, itemIds: string[]): Promise<Offer> {
+  async removedItems(
+    offerId: string,
+    itemIds: string[],
+    removedBy: string,
+  ): Promise<Offer> {
     const offer = await this.offerModel.findById(offerId);
-    if (!offer) {
-      throw new NotFoundException(`Offer with id ${offerId} not found`);
-    }
+    this.checkPrivileges(offer, removedBy);
 
     return this.execWithinTransaction(async (session) => {
       await this.offerItemModel.deleteMany(
@@ -170,6 +175,20 @@ export class OffersService {
       throw error;
     } finally {
       session.endSession();
+    }
+  }
+
+  /**
+   * Checks that the person wanting to update a document has the required priviliges
+   * @param offer
+   * @param actor
+   */
+  private checkPrivileges(offer: Offer, actor: string) {
+    if (!offer) {
+      throw new NotFoundException(`Offer with id ${offer._id} not found`);
+    }
+    if (offer.createdBy !== actor && offer.provider.toString() !== actor) {
+      throw new ForbiddenException("Operation not permitted for active user");
     }
   }
 }

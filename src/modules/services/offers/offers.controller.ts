@@ -71,10 +71,15 @@ export class OffersController {
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
   @ApiCustomOkResponse(OfferEntity)
   async updateOffer(
-    @Param("id") offerId,
+    @Req() request: Request,
+    @Param("id") offerId: string,
     @Body() payload: UpdateOfferDto,
   ): Promise<ResponseDataDto<OfferEntity>> {
-    const updatedOffer = await this.offersService.update(offerId, payload);
+    const updatedOffer = await this.offersService.update(
+      offerId,
+      payload,
+      request.user._id as string,
+    );
     return new ResponseDataDto({
       data: new OfferEntity(updatedOffer.toJSON()),
       message: "All offers created successfully",
@@ -102,11 +107,16 @@ export class OffersController {
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
   @ApiCustomOkResponse(OfferDetailsDto)
   async addedOfferItems(
+    @Req() request: Request,
     @Param("id") offerId: string,
     @Body(new ParseArrayPipe({ items: CreateOfferItemDto }))
     payload: CreateOfferItemDto[],
   ): Promise<ResponseDataDto<OfferDetailsDto>> {
-    const updatedOffer = await this.offersService.addItems(offerId, payload);
+    const updatedOffer = await this.offersService.addItems(
+      offerId,
+      payload,
+      request.user._id as string,
+    );
     return new ResponseDataDto({
       data: new OfferDetailsDto(updatedOffer.toJSON()),
       message: "Offer items created successfully",
@@ -118,6 +128,7 @@ export class OffersController {
   @UseRoles(Role.SUPPORT, Role.PROVIDER)
   @ApiCustomOkResponse(OfferDetailsDto)
   async removeOfferItems(
+    @Req() request: Request,
     @Param("id") offerId: string,
     @Body(new ParseArrayPipe({ items: String }))
     itemIds: string[],
@@ -125,6 +136,7 @@ export class OffersController {
     const updatedOffer = await this.offersService.removedItems(
       offerId,
       itemIds,
+      request.user._id as string,
     );
     return new ResponseDataDto({
       data: new OfferDetailsDto(updatedOffer.toJSON()),

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
@@ -38,25 +42,22 @@ export class ServicesService {
   }
 
   async delete(serviceId: string, deletedBy: string): Promise<void> {
-    const service = await this.serviceModel
-      .findOne({
-        _id: serviceId,
-        $or: [{ createdBy: deletedBy, provider: deletedBy }],
-      })
-      .exec();
-    if (!service)
-      throw new NotFoundException(
-        `Service with id ${serviceId} not found or fobidden for active user`,
-      );
+    const service = await this.serviceModel.findById(serviceId).exec();
+    this.checkPrivileges(service, deletedBy);
+
+    await service.deleteOne().exec();
   }
 
-  async update(serviceId: string, data: UpdateServiceDto): Promise<Service> {
-    return this.serviceModel
-      .findByIdAndUpdate(
-        serviceId,
-        { ...data, updatedAt: new Date() },
-        { new: true },
-      )
+  async update(
+    serviceId: string,
+    data: UpdateServiceDto,
+    updatedBy: string,
+  ): Promise<Service> {
+    const service = await this.serviceModel.findById(serviceId).exec();
+    this.checkPrivileges(service, updatedBy);
+
+    return service
+      .updateOne({ ...data, updatedAt: new Date() }, { new: true })
       .exec();
   }
 
@@ -66,5 +67,19 @@ export class ServicesService {
       throw new NotFoundException(`Service with id ${serviceId} not found`);
     service.images.push(...imageIds.map((id) => new ObjectId(id)));
     return service.save();
+  }
+
+  /**
+   * Checks that the person wanting to update a document has the required priviliges
+   * @param offer
+   * @param actor
+   */
+  private checkPrivileges(service: Service, actor: string) {
+    if (!service) {
+      throw new NotFoundException(`Service with id ${service._id} not found`);
+    }
+    if (service.createdBy !== actor && service.provider.toString() !== actor) {
+      throw new ForbiddenException("Operation not permitted for active user");
+    }
   }
 }

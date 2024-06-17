@@ -43,6 +43,7 @@ import {
   ServiceEntity,
 } from "./dto/service.dto";
 import { ServicesService } from "./services.service";
+import { UpdateOfferDto } from "./offers/dto/offer.dto";
 
 @ApiTags("Services")
 @Controller("services")
@@ -116,6 +117,27 @@ export class ServicesController {
     @Param("id") serviceId: string,
   ): Promise<ResponseDataDto<ServiceDetailsDto>> {
     const service = await this.serviceService.findOne(serviceId); // Call the findOne method with the serviceId parameter
+    return new ResponseDataDto({
+      data: new ServiceDetailsDto(service.toJSON()),
+      message: "Successfully retrieved service",
+      status: HttpStatus.OK,
+    });
+  }
+
+  @Put(":id")
+  @ApiCustomOkResponse(ServiceDetailsDto)
+  @ApiNotFoundResponse({ description: "Service not found" })
+  @ApiBadGatewayResponse({ description: "Invalid service ID" })
+  async update(
+    @Req() request: Request,
+    @Body() payload: UpdateOfferDto,
+    @Param("id") serviceId: string,
+  ): Promise<ResponseDataDto<ServiceDetailsDto>> {
+    const service = await this.serviceService.update(
+      serviceId,
+      payload,
+      request.user._id as string,
+    );
     return new ResponseDataDto({
       data: new ServiceDetailsDto(service.toJSON()),
       message: "Successfully retrieved service",
