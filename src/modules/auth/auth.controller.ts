@@ -12,16 +12,16 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
-import { ResponseMetadataDto } from "../dto";
-import {
-  CreateUserDto,
-  GoogleSignInDto,
-  RegisterUserResponseDto,
-  UserDto,
-} from "../users/dto/users.dto";
+import { ApiCustomCreatedResponse } from "src/helpers/api-decorator";
+import { ResponseDataDto, ResponseMetadataDto } from "src/helpers/api-dto";
+import { CreateUserDto, GoogleSignInDto } from "../users/dto/users.dto";
 import { AuthService } from "./auth.service";
 import { Public } from "./decorator/auth.decorator";
-import { SignInDto, SignInResponseDto } from "./dto/auth.dto";
+import {
+  SignInDto,
+  SignInResponseDto,
+  SignUpResponseDto,
+} from "./dto/auth.dto";
 import { GoogleAuthService } from "./google/google-auth.service";
 
 @ApiTags("Auth")
@@ -69,17 +69,13 @@ export class AuthController {
 
   @Public()
   @Post("register")
-  @ApiCreatedResponse({
-    type: RegisterUserResponseDto,
-    description: "Successful user registration",
-  })
+  @ApiCustomCreatedResponse(SignUpResponseDto)
   async register(
     @Body() createUserDto: CreateUserDto,
-  ): Promise<RegisterUserResponseDto> {
+  ): Promise<ResponseDataDto<SignUpResponseDto>> {
     const { accessToken, user } = await this.authService.singUp(createUserDto);
-    return new RegisterUserResponseDto({
-      accessToken,
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new SignUpResponseDto({ ...user.toJSON(), accessToken }),
       status: HttpStatus.CREATED,
       message: "Successfully register user",
     });

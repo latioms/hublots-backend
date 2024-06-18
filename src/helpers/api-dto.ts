@@ -33,7 +33,16 @@ export class ResponseMetadataDto {
   }
 }
 
-export class BulkResponseMetadataDto extends ResponseMetadataDto {
+export class ResponseDataDto<TData> extends ResponseMetadataDto {
+  data: TData;
+
+  constructor(data: ResponseDataDto<TData>) {
+    super(data);
+    Object.assign(this, data);
+  }
+}
+
+export class PaginatedResponseDataDto<TData> extends ResponseMetadataDto {
   @IsNumber()
   @ApiProperty()
   perpage: number;
@@ -47,8 +56,10 @@ export class BulkResponseMetadataDto extends ResponseMetadataDto {
   @ApiPropertyOptional()
   limit?: number;
 
-  constructor(metadata: BulkResponseMetadataDto) {
-    super(metadata);
-    Object.assign(this, metadata);
+  data: TData[];
+
+  constructor(data: PaginatedResponseDataDto<TData>) {
+    super(data);
+    Object.assign(this, data);
   }
 }

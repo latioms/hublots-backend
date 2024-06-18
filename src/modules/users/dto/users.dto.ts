@@ -1,20 +1,15 @@
 import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
-import { Type } from "class-transformer";
 import {
-  IsArray,
   IsBoolean,
   IsDateString,
   IsEmail,
   IsEnum,
-  IsJWT,
   IsOptional,
   IsPhoneNumber,
   IsString,
   IsUUID,
   MinLength,
-  ValidateNested,
 } from "class-validator";
-import { BulkResponseMetadataDto, ResponseMetadataDto } from "../../dto";
 
 export enum Locale {
   FR = "fr",
@@ -72,8 +67,9 @@ export class CreateUserDto {
     description:
       "The locale is the default language of the user. Required to create a new account",
   })
+  @IsOptional()
   @IsEnum(Locale)
-  locale: Locale;
+  locale: Locale = Locale.FR;
 
   @ApiProperty({
     example: "Lobbessou",
@@ -95,28 +91,7 @@ export class CreateUserDto {
   }
 }
 
-export class GetUserByIdDto {
-  @ApiProperty({
-    example: "Wonder",
-    description: "The user ID is required to obtain a user account.",
-  })
-  @IsUUID()
-  id: string;
-}
-
-export class CreateAccountDto extends OmitType(CreateUserDto, ["password"]) {
-  @ApiProperty({
-    example: ["CLIENT", "PROVIDER"],
-    description:
-      "The roles property is an array of Roles for the user. Required to create a new account.",
-    isArray: true,
-    enum: Role,
-  })
-  @IsEnum(Role, { each: true })
-  roles: Role[];
-}
-
-export class UserDto extends CreateUserDto {
+export class UserEntity extends CreateUserDto {
   @IsUUID()
   @ApiProperty()
   id: string;
@@ -153,61 +128,22 @@ export class UserDto extends CreateUserDto {
   @ApiProperty()
   isActive: boolean = true;
 
-  constructor(user: UserDto) {
+  constructor(user: UserEntity) {
     super(user);
     Object.assign(this, user);
   }
 }
 
-export class UpdateProfileDto extends PartialType(
-  OmitType(UserDto, ["password", "email", "verificationStatus"] as const),
-) {}
-export class UpdateUserDto extends PartialType(
-  OmitType(UserDto, ["password", "email"] as const),
-) {}
-
-export class RegisterUserResponseDto extends ResponseMetadataDto {
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => UserDto)
-  data: UserDto;
-
+export class CreateAccountDto extends OmitType(CreateUserDto, ["password"]) {
   @ApiProperty({
-    description: "Valid access token",
-    required: true,
+    example: ["CLIENT", "PROVIDER"],
+    description:
+      "The roles property is an array of Roles for the user. Required to create a new account.",
+    isArray: true,
+    enum: Role,
   })
-  @IsJWT()
-  accessToken: string;
-
-  constructor(responseBody: RegisterUserResponseDto) {
-    super(responseBody);
-    Object.assign(this, responseBody);
-  }
-}
-
-export class GetAllUserResponseDto extends BulkResponseMetadataDto {
-  @IsArray()
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => UserDto)
-  data: UserDto[];
-
-  constructor(response: GetAllUserResponseDto) {
-    super(response);
-    Object.assign(this, response);
-  }
-}
-
-export class GetOneUserResponseDto extends ResponseMetadataDto {
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => UserDto)
-  data: UserDto;
-
-  constructor(response: GetOneUserResponseDto) {
-    super(response);
-    Object.assign(this, response);
-  }
+  @IsEnum(Role, { each: true })
+  roles: Role[];
 }
 
 export class GoogleSignInDto {
@@ -223,3 +159,10 @@ export class GoogleSignInDto {
   @IsString()
   socialMode: string;
 }
+
+export class UpdateProfileDto extends PartialType(
+  OmitType(UserEntity, ["password", "email", "verificationStatus"] as const),
+) {}
+export class UpdateUserDto extends PartialType(
+  OmitType(UserEntity, ["password", "email"] as const),
+) {}
