@@ -40,7 +40,7 @@ async function bootstrap() {
     },
   });
 
-  const PORT = 8080;
+  const PORT = process.env.PORT || 8080;
   await app.listen(PORT, () => {
     Logger.log(`Server is runnnig on port ${PORT}`);
   });
