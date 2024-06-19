@@ -14,26 +14,27 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import {
-  ApiBadRequestResponse,
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiTags,
-} from "@nestjs/swagger";
+import { ApiNoContentResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
+import {
+  ApiCustomCreatedResponse,
+  ApiCustomOkResponse,
+  ApiOkPaginatedResponse,
+} from "src/helpers/api-decorator";
+import {
+  BulkQueryDto,
+  PaginatedResponseDataDto,
+  ResponseDataDto,
+  ResponseMetadataDto,
+} from "src/helpers/api-dto";
 import { UseRoles } from "../auth/decorator/auth.decorator";
-import { BulkQueryDto, ResponseMetadataDto } from "../dto";
 import { FileUploadService } from "../files/file-upload.service";
 import {
   CreateAccountDto,
-  GetAllUserResponseDto,
-  GetOneUserResponseDto,
   Role,
   UpdateProfileDto,
   UpdateUserDto,
-  UserDto,
+  UserEntity,
 } from "./dto/users.dto";
 import { UsersService } from "./users.service";
 
@@ -47,14 +48,13 @@ export class UsersController {
 
   @Get()
   @UseRoles(Role.ADMIN, Role.SUPPORT)
-  @ApiOkResponse({
-    type: GetAllUserResponseDto,
-    description: "list of successfully loaded users",
-  })
-  async findAll(@Query() query: BulkQueryDto): Promise<GetAllUserResponseDto> {
+  @ApiOkPaginatedResponse(UserEntity)
+  async findAll(
+    @Query() query: BulkQueryDto,
+  ): Promise<PaginatedResponseDataDto<UserEntity>> {
     const users = await this.usersService.findAll(query);
-    return new GetAllUserResponseDto({
-      data: users.map((user) => new UserDto(user.toJSON())),
+    return new PaginatedResponseDataDto({
+      data: users.map((user) => new UserEntity(user.toJSON())),
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
       status: HttpStatus.OK,
@@ -63,30 +63,24 @@ export class UsersController {
   }
 
   @Get("profile")
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "Successful user registration",
-  })
-  async getProfile(@Req() req: Request): Promise<GetOneUserResponseDto> {
-    return new GetOneUserResponseDto({
-      data: new UserDto(req.user.toJSON()),
+  @ApiCustomOkResponse(UserEntity)
+  async getProfile(@Req() req: Request): Promise<ResponseDataDto<UserEntity>> {
+    return new ResponseDataDto({
+      data: new UserEntity(req.user.toJSON()),
       message: "Successfully retrieved user profile",
       status: HttpStatus.OK,
     });
   }
 
   @Put("profile")
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "The user has been successfully modified",
-  })
+  @ApiCustomOkResponse(UserEntity)
   async updateProfile(
     @Req() req: Request,
     @Body() updateProfileDto: UpdateProfileDto,
-  ): Promise<GetOneUserResponseDto> {
+  ): Promise<ResponseDataDto<UserEntity>> {
     const user = await this.usersService.update(req.user.id, updateProfileDto);
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new UserEntity(user.toJSON()),
       message: "Successfully retrieved user",
       status: HttpStatus.OK,
     });
@@ -94,17 +88,14 @@ export class UsersController {
 
   @Get(":id")
   @UseRoles(Role.ADMIN, Role.SUPPORT)
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "User information successfully retrieved",
-  })
-  @ApiNotFoundResponse({ description: "User not found" })
-  @ApiBadRequestResponse({ description: "Invalid user ID" })
-  async findOne(@Param("id") userId: string): Promise<GetOneUserResponseDto> {
+  @ApiCustomOkResponse(UserEntity)
+  async findOne(
+    @Param("id") userId: string,
+  ): Promise<ResponseDataDto<UserEntity>> {
     const user = await this.usersService.findOne(userId);
 
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new UserEntity(user.toJSON()),
       message: "Successfully retrieved user",
       status: HttpStatus.OK,
     });
@@ -112,17 +103,14 @@ export class UsersController {
 
   @Put(":id")
   @UseRoles(Role.ADMIN, Role.SUPPORT)
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "The user has been successfully modified",
-  })
+  @ApiCustomOkResponse(UserEntity)
   async update(
     @Param("id") userId: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<GetOneUserResponseDto> {
+  ): Promise<ResponseDataDto<UserEntity>> {
     const user = await this.usersService.update(userId, updateUserDto);
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new UserEntity(user.toJSON()),
       message: "Successfully retrieved user",
       status: HttpStatus.OK,
     });
@@ -144,12 +132,12 @@ export class UsersController {
 
   @Put("profile/kyc-files")
   @UseRoles(Role.CLIENT)
-  @ApiOkResponse({
-    type: GetOneUserResponseDto,
-    description: "Successfully uploaded user KYC images",
-  })
+  @ApiCustomOkResponse(UserEntity)
   @UseInterceptors(FileInterceptor("file"))
-  async uploadKYCImages(@Req() req: Request, @UploadedFiles() files) {
+  async uploadKYCImages(
+    @Req() req: Request,
+    @UploadedFiles() files,
+  ): Promise<ResponseDataDto<UserEntity>> {
     const imageIds = [];
     for (const file of files) {
       const image = await this.fileUploadService.uploadImage(file);
@@ -157,8 +145,8 @@ export class UsersController {
     }
 
     const user = await this.usersService.addKYCImages(req.user.id, imageIds);
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new UserEntity(user.toJSON()),
       message: "Successfully uploaded user KYC images",
       status: HttpStatus.OK,
     });
@@ -166,11 +154,11 @@ export class UsersController {
 
   @Post("/new")
   @UseRoles(Role.ADMIN, Role.SUPPORT)
-  @ApiCreatedResponse({
-    type: GetOneUserResponseDto,
-    description: "Successfully created user account",
-  })
-  async createUser(@Req() req: Request, @Body() newUser: CreateAccountDto) {
+  @ApiCustomCreatedResponse(UserEntity)
+  async createUser(
+    @Req() req: Request,
+    @Body() newUser: CreateAccountDto,
+  ): Promise<ResponseDataDto<UserEntity>> {
     const roles = req.user.roles;
 
     if (
@@ -182,8 +170,8 @@ export class UsersController {
       );
 
     const user = await this.usersService.createAcount(newUser);
-    return new GetOneUserResponseDto({
-      data: new UserDto(user.toJSON()),
+    return new ResponseDataDto({
+      data: new UserEntity(user.toJSON()),
       message: "Successfully create user account",
       status: HttpStatus.OK,
     });

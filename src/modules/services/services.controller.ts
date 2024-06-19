@@ -14,50 +14,54 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadGatewayResponse,
   ApiConsumes,
-  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiTags,
 } from "@nestjs/swagger";
 import { Request } from "express";
+import {
+  ApiCustomCreatedResponse,
+  ApiCustomOkResponse,
+  ApiOkPaginatedResponse,
+} from "src/helpers/api-decorator";
+import {
+  BulkQueryDto,
+  PaginatedResponseDataDto,
+  ResponseMetadataDto,
+  ResponseDataDto,
+} from "src/helpers/api-dto";
 import { Public, UseRoles } from "../auth/decorator/auth.decorator";
-import { BulkQueryDto, ResponseMetadataDto } from "../dto";
+import { FileUploadService } from "../files/file-upload.service";
 import { Role } from "../users/dto";
 import {
-  AddServiceResponseDto,
   CreateServiceDto,
-  GetAllServiceResponseDto,
-  GetOneServiceResponseDto,
-  ServiceDto,
+  ServiceDetailsDto,
+  ServiceEntity,
 } from "./dto/service.dto";
-import { ServiceService } from "./service.service";
-import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { FileUploadService } from "../files/file-upload.service";
+import { ServicesService } from "./services.service";
+import { UpdateOfferDto } from "./offers/dto/offer.dto";
 
 @ApiTags("Services")
 @Controller("services")
-export class ServiceController {
+export class ServicesController {
   constructor(
-    private serviceService: ServiceService,
+    private serviceService: ServicesService,
     private fileUploadService: FileUploadService,
   ) {}
 
   @Get()
   @Public()
-  @ApiOkResponse({
-    type: GetAllServiceResponseDto,
-    description: "list of successfully loaded services",
-  })
+  @ApiOkPaginatedResponse(ServiceEntity)
   async findAll(
     @Query() query: BulkQueryDto,
-  ): Promise<GetAllServiceResponseDto> {
+  ): Promise<PaginatedResponseDataDto<ServiceEntity>> {
     const services = await this.serviceService.findAll(query);
-    return new GetAllServiceResponseDto({
-      data: services.map((service) => new ServiceDto(service.toJSON())),
+    return new PaginatedResponseDataDto({
+      data: services.map((service) => new ServiceEntity(service.toJSON())),
       page: query.page ?? 1,
       perpage: query.perpage ?? 10,
       status: HttpStatus.OK,
@@ -69,15 +73,12 @@ export class ServiceController {
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(FileInterceptor("file"))
   @UseRoles(Role.PROVIDER, Role.SUPPORT)
-  @ApiCreatedResponse({
-    type: AddServiceResponseDto,
-    description: "Service Created Sucessfully",
-  })
+  @ApiCustomCreatedResponse(ServiceEntity)
   async create(
     @UploadedFile() file,
     @Req() request: Request,
     @Body() createServiceDto: CreateServiceDto,
-  ): Promise<AddServiceResponseDto> {
+  ): Promise<ResponseDataDto<ServiceEntity>> {
     if (
       !createServiceDto.provider &&
       !request.user.roles.includes(Role.PROVIDER)
@@ -96,28 +97,49 @@ export class ServiceController {
       newService.mainImageId = image.id;
     }
 
-    const service = await this.serviceService.create(newService);
+    const service = await this.serviceService.create(
+      newService,
+      request.user.id,
+    );
 
-    return new AddServiceResponseDto({
-      data: new ServiceDto(service.toJSON()),
+    return new ResponseDataDto({
+      data: new ServiceEntity(service.toJSON()),
       message: "Service Created Sucessfully",
       status: HttpStatus.CREATED,
     });
   }
 
   @Get(":id")
-  @ApiOkResponse({
-    type: GetOneServiceResponseDto,
-    description: "Service information successfully retrieved",
-  })
+  @ApiCustomOkResponse(ServiceDetailsDto)
   @ApiNotFoundResponse({ description: "Service not found" })
   @ApiBadGatewayResponse({ description: "Invalid service ID" })
   async findOne(
     @Param("id") serviceId: string,
-  ): Promise<GetOneServiceResponseDto> {
+  ): Promise<ResponseDataDto<ServiceDetailsDto>> {
     const service = await this.serviceService.findOne(serviceId); // Call the findOne method with the serviceId parameter
-    return new GetOneServiceResponseDto({
-      data: new ServiceDto(service.toJSON()),
+    return new ResponseDataDto({
+      data: new ServiceDetailsDto(service.toJSON()),
+      message: "Successfully retrieved service",
+      status: HttpStatus.OK,
+    });
+  }
+
+  @Put(":id")
+  @ApiCustomOkResponse(ServiceDetailsDto)
+  @ApiNotFoundResponse({ description: "Service not found" })
+  @ApiBadGatewayResponse({ description: "Invalid service ID" })
+  async update(
+    @Req() request: Request,
+    @Body() payload: UpdateOfferDto,
+    @Param("id") serviceId: string,
+  ): Promise<ResponseDataDto<ServiceDetailsDto>> {
+    const service = await this.serviceService.update(
+      serviceId,
+      payload,
+      request.user._id as string,
+    );
+    return new ResponseDataDto({
+      data: new ServiceDetailsDto(service.toJSON()),
       message: "Successfully retrieved service",
       status: HttpStatus.OK,
     });
@@ -129,26 +151,26 @@ export class ServiceController {
     type: ResponseMetadataDto,
     description: "Service successfully deleted",
   })
-  async delete(@Param("id") serviceId: string): Promise<ResponseMetadataDto> {
-    await this.serviceService.delete(serviceId);
+  async delete(
+    @Req() request: Request,
+    @Param("id") serviceId: string,
+  ): Promise<ResponseMetadataDto> {
+    await this.serviceService.delete(serviceId, request.user._id as string);
     return new ResponseMetadataDto({
       status: HttpStatus.NO_CONTENT,
       message: "Service successfully deleted",
     });
   }
 
-  @Put(":service_id/images")
+  @Put(":id/images")
   @ApiConsumes("multipart/form-data")
   @UseInterceptors(FilesInterceptor("files"))
   @UseRoles(Role.PROVIDER, Role.SUPPORT)
-  @ApiCreatedResponse({
-    type: AddServiceResponseDto,
-    description: "Service Created Sucessfully",
-  })
+  @ApiCustomOkResponse(ServiceEntity)
   async uploadImages(
     @UploadedFiles() files,
-    @Param("service_id") serviceId: string,
-  ) {
+    @Param("id") serviceId: string,
+  ): Promise<ResponseDataDto<ServiceEntity>> {
     if (!Array.isArray(files)) {
       throw new BadRequestException("Except an array of files");
     }
@@ -160,8 +182,8 @@ export class ServiceController {
     }
 
     const service = await this.serviceService.addImages(serviceId, imageIds);
-    return new AddServiceResponseDto({
-      data: new ServiceDto(service.toJSON()),
+    return new ResponseDataDto({
+      data: new ServiceEntity(service.toJSON()),
       message: "Service Created Sucessfully",
       status: HttpStatus.CREATED,
     });

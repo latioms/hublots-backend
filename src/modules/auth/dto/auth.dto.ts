@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsJWT, IsString } from "class-validator";
-import { ResponseMetadataDto } from "src/modules/dto";
+import { ResponseMetadataDto } from "src/helpers/api-dto";
+import { UserEntity } from "src/modules/users/dto";
 
 export class SignInDto {
   @ApiProperty({
@@ -29,6 +30,19 @@ export class SignInResponseDto extends ResponseMetadataDto {
   constructor(responseBody: SignInResponseDto) {
     super(responseBody);
     Object.assign(this, responseBody);
+  }
+}
+
+export class SignUpResponseDto extends UserEntity {
+  @ApiProperty({
+    description: "Valid access token",
+    required: true,
+  })
+  accessToken: string;
+
+  constructor(data: SignUpResponseDto) {
+    super(data);
+    Object.assign(this, data);
   }
 }
 

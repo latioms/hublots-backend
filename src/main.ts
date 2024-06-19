@@ -12,6 +12,7 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidUnknownValues: true }),
   );
 
+  app.setGlobalPrefix("api");
   app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
 
   // Swagger initialise
@@ -32,7 +33,7 @@ async function bootstrap() {
   ); // Load custom script
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document, {
+  SwaggerModule.setup("docs", app, document, {
     customCss,
     customSiteTitle: "Hublot",
     swaggerOptions: {
@@ -40,7 +41,7 @@ async function bootstrap() {
     },
   });
 
-  const PORT = 8080;
+  const PORT = process.env.PORT || 8080;
   await app.listen(PORT, () => {
     Logger.log(`Server is runnnig on port ${PORT}`);
   });
